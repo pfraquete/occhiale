@@ -15,11 +15,11 @@ export function ServiceWorkerRegister() {
     ) {
       navigator.serviceWorker
         .register("/sw.js")
-        .then((registration) => {
-          console.log("SW registered:", registration.scope);
+        .then(() => {
+          // Service worker registered successfully
         })
-        .catch((error) => {
-          console.log("SW registration failed:", error);
+        .catch(() => {
+          // Service worker registration failed — non-critical
         });
     }
   }, []);

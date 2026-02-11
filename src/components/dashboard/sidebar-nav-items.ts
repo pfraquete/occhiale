@@ -5,6 +5,9 @@ import {
   Users,
   MessageSquare,
   Settings,
+  BarChart3,
+  Zap,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -39,6 +42,21 @@ export const sidebarNavItems: NavItem[] = [
     label: "WhatsApp",
     href: "/dashboard/whatsapp",
     icon: MessageSquare,
+  },
+  {
+    label: "Analytics",
+    href: "/dashboard/analytics",
+    icon: BarChart3,
+  },
+  {
+    label: "CRM",
+    href: "/dashboard/crm",
+    icon: Zap,
+  },
+  {
+    label: "SEO",
+    href: "/dashboard/seo",
+    icon: FileText,
   },
   {
     label: "Configurações",

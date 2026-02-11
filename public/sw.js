@@ -1,5 +1,5 @@
 // Occhiale Service Worker
-// Provides offline support and caching for the PWA
+// Provides offline support, caching, and push notifications for the PWA
 
 const CACHE_NAME = "occhiale-v1";
 const OFFLINE_URL = "/offline.html";
@@ -98,4 +98,81 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
+});
+
+// ------------------------------------------
+// Push Notifications
+// ------------------------------------------
+
+// Handle incoming push notifications
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = {
+      title: "OCCHIALE",
+      body: event.data.text(),
+    };
+  }
+
+  const options = {
+    body: payload.body || "",
+    icon: payload.icon || "/icons/icon-192x192.png",
+    badge: payload.badge || "/icons/icon-96x96.png",
+    tag: payload.tag || "occhiale-notification",
+    data: {
+      url: payload.url || "/dashboard",
+    },
+    vibrate: [100, 50, 100],
+    actions: [
+      {
+        action: "open",
+        title: "Abrir",
+      },
+      {
+        action: "dismiss",
+        title: "Dispensar",
+      },
+    ],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || "OCCHIALE", options)
+  );
+});
+
+// Handle notification click
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  if (event.action === "dismiss") return;
+
+  const targetUrl = event.notification.data?.url || "/dashboard";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        // If a window is already open, focus it and navigate
+        for (const client of clientList) {
+          if (client.url.includes("/dashboard") && "focus" in client) {
+            client.focus();
+            client.navigate(targetUrl);
+            return;
+          }
+        }
+        // Otherwise open a new window
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(targetUrl);
+        }
+      })
+  );
+});
+
+// Handle notification close
+self.addEventListener("notificationclose", (_event) => {
+  // Analytics tracking could go here
 });

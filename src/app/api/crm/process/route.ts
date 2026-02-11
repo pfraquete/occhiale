@@ -201,7 +201,8 @@ async function processAbandonedCarts(supabase: any): Promise<number> {
         });
 
         // We'd need the customer's email here — skip if not available
-        console.log("Abandoned cart email template ready:", email.subject);
+        // TODO: Send email when customer email is available
+        void email;
       }
     }
   }

@@ -163,6 +163,30 @@ fi
 
 echo "-----------------------------------"
 echo ""
+# ------------------------------------------
+# 7. Setup Backup Cron
+# ------------------------------------------
+log "Configuring automatic database backups..."
+
+# Install postgresql-client for pg_dump
+if ! command -v pg_dump &>/dev/null; then
+  apt-get install -y postgresql-client-common postgresql-client >/dev/null 2>&1 || true
+fi
+
+mkdir -p "${BACKUP_DIR:-/opt/occhiale/backups}"
+
+# Add cron job for daily backup at 3 AM
+CRON_CMD="0 3 * * * cd $SCRIPT_DIR && ./backup.sh >> /var/log/occhiale-backup.log 2>&1"
+if ! crontab -l 2>/dev/null | grep -q "backup.sh"; then
+  (crontab -l 2>/dev/null; echo "$CRON_CMD") | crontab -
+  log "Backup cron job added (daily at 3 AM)"
+else
+  log "Backup cron job already configured"
+fi
+
+# ------------------------------------------
+# Done
+# ------------------------------------------
 log "Setup complete! Next steps:"
 echo "  1. Ensure DNS A records point to this VPS IP for:"
 echo "     - ${EVOLUTION_DOMAIN:-api.yourdomain.com}"
@@ -171,3 +195,4 @@ echo "  2. Caddy will automatically obtain SSL certificates"
 echo "  3. Copy EVOLUTION_API_KEY and MEILISEARCH_MASTER_KEY to your Next.js .env.local"
 echo "  4. Deploy Next.js to Vercel and configure environment variables"
 echo "  5. Monitor: docker compose logs -f"
+echo "  6. Backups: check /var/log/occhiale-backup.log"
