@@ -6,8 +6,20 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { MeiliSearch } from "meilisearch";
+import crypto from "crypto";
 import { configureIndices } from "@/lib/meilisearch/indices";
 import { syncAllProducts, syncStoreProducts } from "@/lib/meilisearch/sync";
+
+/**
+ * Timing-safe comparison of two strings.
+ * Uses HMAC normalization to handle different-length inputs
+ * without leaking length information.
+ */
+function timingSafeCompare(a: string, b: string): boolean {
+  const hmacA = crypto.createHmac("sha256", "occhiale").update(a).digest();
+  const hmacB = crypto.createHmac("sha256", "occhiale").update(b).digest();
+  return crypto.timingSafeEqual(hmacA, hmacB);
+}
 
 /**
  * POST /api/meilisearch/sync
@@ -21,8 +33,21 @@ import { syncAllProducts, syncStoreProducts } from "@/lib/meilisearch/sync";
 export async function POST(request: NextRequest) {
   try {
     // 1. Verify internal auth
-    const internalKey = request.headers.get("x-internal-key");
-    if (internalKey !== process.env.EVOLUTION_API_KEY) {
+    const expectedKey = process.env.EVOLUTION_API_KEY;
+
+    // FIX: Reject if EVOLUTION_API_KEY is not configured (prevents auth bypass)
+    if (!expectedKey) {
+      console.error("EVOLUTION_API_KEY is not configured — rejecting request");
+      return NextResponse.json(
+        { error: "Server misconfigured" },
+        { status: 500 }
+      );
+    }
+
+    const internalKey = request.headers.get("x-internal-key") ?? "";
+
+    // FIX: Use timing-safe comparison to prevent timing attacks
+    if (!timingSafeCompare(internalKey, expectedKey)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -32,9 +57,12 @@ export async function POST(request: NextRequest) {
     const configure = body.configure as boolean | undefined;
 
     // 3. Configure indices if requested (first-time setup)
+    // FIX: Support both env var naming conventions
     if (configure) {
-      const host = process.env.MEILISEARCH_URL;
-      const apiKey = process.env.MEILISEARCH_API_KEY;
+      const host =
+        process.env.MEILISEARCH_URL ?? process.env.NEXT_PUBLIC_MEILISEARCH_HOST;
+      const apiKey =
+        process.env.MEILISEARCH_API_KEY ?? process.env.MEILISEARCH_ADMIN_KEY;
 
       if (!host) {
         return NextResponse.json(

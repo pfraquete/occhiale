@@ -9,6 +9,7 @@ import {
   isPrescriptionExpired,
   isHighComplexity,
 } from "@/lib/validations/prescription";
+import { isValidHttpUrl } from "@/lib/utils/sanitize";
 
 // ------------------------------------------
 // Types
@@ -74,6 +75,25 @@ Responda APENAS com um JSON válido (sem markdown, sem explicações):
 }`;
 
 // ------------------------------------------
+// Singleton Client
+// ------------------------------------------
+
+// FIX: Reuse singleton Anthropic client instead of creating a new one per call
+let _ocrClient: Anthropic | null = null;
+
+function getOcrClient(): Anthropic {
+  if (_ocrClient) return _ocrClient;
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing ANTHROPIC_API_KEY");
+  }
+
+  _ocrClient = new Anthropic({ apiKey });
+  return _ocrClient;
+}
+
+// ------------------------------------------
 // Main Function
 // ------------------------------------------
 
@@ -84,16 +104,25 @@ Responda APENAS com um JSON válido (sem markdown, sem explicações):
 export async function analyzePrescriptionImage(
   imageUrl: string
 ): Promise<PrescriptionOcrResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  // FIX: Validate URL to prevent SSRF attacks
+  if (!isValidHttpUrl(imageUrl)) {
+    return {
+      success: false,
+      warnings: [],
+      error: "URL da imagem inválida. Apenas URLs HTTP/HTTPS são aceitas.",
+    };
+  }
+
+  let client: Anthropic;
+  try {
+    client = getOcrClient();
+  } catch {
     return {
       success: false,
       warnings: [],
       error: "API key não configurada para análise de receitas.",
     };
   }
-
-  const client = new Anthropic({ apiKey });
 
   // Call Claude Vision
   const response = await client.messages.create({

@@ -5,6 +5,7 @@
 // ============================================
 
 import { NextResponse, type NextRequest } from "next/server";
+import crypto from "crypto";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { processMessage } from "@/lib/ai/claude-client";
 import { getEvolutionClient } from "@/lib/evolution/client";
@@ -15,6 +16,17 @@ import {
   updateConversationState,
 } from "@/lib/supabase/queries/whatsapp";
 import { aiChatRequestSchema } from "@/lib/validations/whatsapp";
+
+/**
+ * Timing-safe comparison of two strings.
+ * Uses HMAC normalization to handle different-length inputs
+ * without leaking length information.
+ */
+function timingSafeCompare(a: string, b: string): boolean {
+  const hmacA = crypto.createHmac("sha256", "occhiale").update(a).digest();
+  const hmacB = crypto.createHmac("sha256", "occhiale").update(b).digest();
+  return crypto.timingSafeEqual(hmacA, hmacB);
+}
 
 /**
  * Internal API route for AI message processing.
@@ -30,8 +42,21 @@ import { aiChatRequestSchema } from "@/lib/validations/whatsapp";
 export async function POST(request: NextRequest) {
   try {
     // 1. Verify internal auth
-    const internalKey = request.headers.get("x-internal-key");
-    if (internalKey !== process.env.EVOLUTION_API_KEY) {
+    const expectedKey = process.env.EVOLUTION_API_KEY;
+
+    // FIX: Reject if EVOLUTION_API_KEY is not configured (prevents auth bypass)
+    if (!expectedKey) {
+      console.error("EVOLUTION_API_KEY is not configured — rejecting request");
+      return NextResponse.json(
+        { error: "Server misconfigured" },
+        { status: 500 }
+      );
+    }
+
+    const internalKey = request.headers.get("x-internal-key") ?? "";
+
+    // FIX: Use timing-safe comparison to prevent timing attacks
+    if (!timingSafeCompare(internalKey, expectedKey)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -62,6 +87,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Conversation not found" },
         { status: 404 }
+      );
+    }
+
+    // FIX: Cross-tenant validation — verify conversation belongs to the claimed store
+    if (conversation.store_id !== storeId) {
+      console.warn(
+        `Cross-tenant attempt: conversation ${conversationId} belongs to store ${conversation.store_id}, not ${storeId}`
+      );
+      return NextResponse.json(
+        { error: "Conversation does not belong to this store" },
+        { status: 403 }
       );
     }
 

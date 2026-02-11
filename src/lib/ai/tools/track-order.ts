@@ -5,6 +5,7 @@
 
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { formatCentsToBRL } from "@/lib/utils/format";
+import { sanitizePostgrestFilter } from "@/lib/utils/sanitize";
 import type { ToolContext } from "./index";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -29,28 +30,36 @@ export async function executeTrackOrder(
   input: Record<string, unknown>,
   context: ToolContext
 ): Promise<string> {
-  const orderNumber = input.orderNumber as string | undefined;
+  const rawOrderNumber = input.orderNumber as string | undefined;
 
-  if (!orderNumber) {
+  if (!rawOrderNumber) {
     return JSON.stringify({ error: "Número do pedido não fornecido." });
+  }
+
+  // FIX: Sanitize order number to prevent PostgREST filter injection
+  const safeOrderNumber = sanitizePostgrestFilter(rawOrderNumber);
+  if (!safeOrderNumber) {
+    return JSON.stringify({ error: "Número do pedido inválido." });
   }
 
   const supabase = createServiceRoleClient();
 
+  // FIX: Use .maybeSingle() instead of .single() to avoid PGRST116
+  // when multiple partial matches exist with .ilike() + .limit(1)
   const { data: order } = await supabase
     .from("orders")
     .select(
       "id, order_number, status, payment_status, total, subtotal, shipping_cost, discount, payment_method, shipping_tracking, created_at, updated_at"
     )
     .eq("store_id", context.storeId)
-    .ilike("order_number", `%${orderNumber}%`)
+    .ilike("order_number", `%${safeOrderNumber}%`)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (!order) {
     return JSON.stringify({
       found: false,
-      message: `Pedido "${orderNumber}" não encontrado. Verifique o número e tente novamente.`,
+      message: `Pedido "${safeOrderNumber}" não encontrado. Verifique o número e tente novamente.`,
     });
   }
 

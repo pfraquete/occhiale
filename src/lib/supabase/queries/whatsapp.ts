@@ -5,6 +5,7 @@
 // ============================================
 
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { sanitizePostgrestFilter } from "@/lib/utils/sanitize";
 import type { AgentState } from "@/lib/types/domain";
 
 // ------------------------------------------
@@ -23,6 +24,7 @@ export async function findOrCreateConversation(
   const supabase = createServiceRoleClient();
 
   // Try to find existing active conversation
+  // FIX: .single() → .maybeSingle() to avoid throwing when no rows found
   const { data: existing } = await supabase
     .from("whatsapp_conversations")
     .select("*")
@@ -30,7 +32,7 @@ export async function findOrCreateConversation(
     .eq("phone", phone)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (existing) {
     // Update last_message_at
@@ -43,13 +45,14 @@ export async function findOrCreateConversation(
   }
 
   // Try to find customer by phone
+  // FIX: .single() → .maybeSingle() to avoid throwing when no rows found
   const { data: customer } = await supabase
     .from("customers")
     .select("id")
     .eq("store_id", storeId)
     .eq("phone", phone)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   // Create new conversation
   const { data: conversation, error } = await supabase
@@ -119,10 +122,14 @@ export async function getConversationsForStore(
     query = query.eq("is_ai_active", options.isAiActive);
   }
 
+  // FIX: Sanitize search input to prevent PostgREST filter injection
   if (options?.search) {
-    query = query.or(
-      `phone.ilike.%${options.search}%,customers.name.ilike.%${options.search}%`
-    );
+    const safeSearch = sanitizePostgrestFilter(options.search);
+    if (safeSearch) {
+      query = query.or(
+        `phone.ilike.%${safeSearch}%,customers.name.ilike.%${safeSearch}%`
+      );
+    }
   }
 
   const { data, error, count } = await query;
@@ -148,15 +155,23 @@ export async function updateConversationState(
 ) {
   const supabase = createServiceRoleClient();
 
+  // FIX: Use !== undefined instead of && (truthy check) for agentState
+  // so that falsy-like values are not accidentally skipped
   const { error } = await supabase
     .from("whatsapp_conversations")
     .update({
-      ...(updates.agentState && { agent_state: updates.agentState }),
+      ...(updates.agentState !== undefined && {
+        agent_state: updates.agentState,
+      }),
       ...(updates.isAiActive !== undefined && {
         is_ai_active: updates.isAiActive,
       }),
-      ...(updates.sentiment && { sentiment: updates.sentiment }),
-      ...(updates.customerId && { customer_id: updates.customerId }),
+      ...(updates.sentiment !== undefined && {
+        sentiment: updates.sentiment,
+      }),
+      ...(updates.customerId !== undefined && {
+        customer_id: updates.customerId,
+      }),
     })
     .eq("id", conversationId);
 

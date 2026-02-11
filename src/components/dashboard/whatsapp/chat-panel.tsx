@@ -51,6 +51,9 @@ export function ChatPanel({
   );
 
   // Load messages when conversation changes
+  // FIX: Use API route instead of directly importing server-only module
+  // The previous code imported getMessagesForConversation which uses
+  // createServiceRoleClient() — not available in the browser.
   useEffect(() => {
     if (!conversation) {
       setMessages([]);
@@ -62,12 +65,15 @@ export function ChatPanel({
     async function loadMessages() {
       setLoading(true);
       try {
-        const { getMessagesForConversation } =
-          await import("@/lib/supabase/queries/whatsapp");
-        const msgs = await getMessagesForConversation(conversation!.id, {
-          limit: 50,
-        });
-        setMessages(msgs);
+        const res = await fetch(
+          `/api/whatsapp/messages?conversationId=${conversation!.id}&limit=50`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setMessages(data.messages ?? []);
+        } else {
+          console.error("Failed to load messages:", res.statusText);
+        }
       } catch (error) {
         console.error("Failed to load messages:", error);
       } finally {

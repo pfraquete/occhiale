@@ -5,6 +5,7 @@
 
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { getProductsIndex, type MeiliProduct } from "./client";
+import { sanitizeMeiliFilter } from "@/lib/utils/sanitize";
 
 // ------------------------------------------
 // Types
@@ -19,33 +20,92 @@ export interface SyncResult {
 }
 
 // ------------------------------------------
-// Sync Functions
+// Constants
 // ------------------------------------------
 
+/** Supabase default limit is 1000 rows. We paginate to avoid silent truncation. */
+const SUPABASE_PAGE_SIZE = 1000;
+
+const PRODUCT_SELECT_COLUMNS =
+  "id, store_id, name, brand, category, description_seo, price, compare_price, stock_qty, is_active, images, specs, created_at, updated_at";
+
+// ------------------------------------------
+// Helpers
+// ------------------------------------------
+
+function toMeiliProduct(p: Record<string, unknown>): MeiliProduct {
+  return {
+    id: p.id as string,
+    store_id: p.store_id as string,
+    name: p.name as string,
+    brand: p.brand as string | null,
+    category: p.category as string,
+    description_seo: p.description_seo as string | null,
+    price: p.price as number,
+    compare_price: p.compare_price as number | null,
+    stock_qty: p.stock_qty as number,
+    is_active: p.is_active as boolean,
+    images: (p.images as string[]) ?? [],
+    specs: (p.specs as Record<string, unknown>) ?? {},
+    created_at: p.created_at as string,
+    updated_at: p.updated_at as string,
+  };
+}
+
 /**
- * Sync all products for a specific store to Meilisearch.
- * Fetches all products from Supabase and bulk upserts them.
+ * Fetch all rows from a Supabase query with pagination to avoid the 1000-row default limit.
  */
-export async function syncStoreProducts(storeId: string): Promise<SyncResult> {
-  const start = Date.now();
+async function fetchAllProducts(storeId?: string): Promise<MeiliProduct[]> {
+  const supabase = createServiceRoleClient();
+  const allProducts: MeiliProduct[] = [];
+  let offset = 0;
 
-  try {
-    const supabase = createServiceRoleClient();
-    const index = getProductsIndex();
-
-    // Fetch all products for this store
-    const { data: products, error } = await supabase
+  while (true) {
+    let query = supabase
       .from("products")
-      .select(
-        "id, store_id, name, brand, category, description_seo, price, compare_price, stock_qty, is_active, images, specs, created_at, updated_at"
-      )
-      .eq("store_id", storeId);
+      .select(PRODUCT_SELECT_COLUMNS)
+      .range(offset, offset + SUPABASE_PAGE_SIZE - 1);
+
+    if (storeId) {
+      query = query.eq("store_id", storeId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       throw new Error(`Failed to fetch products: ${error.message}`);
     }
 
-    if (!products || products.length === 0) {
+    if (!data || data.length === 0) break;
+
+    allProducts.push(
+      ...data.map((p) => toMeiliProduct(p as Record<string, unknown>))
+    );
+
+    // If we got fewer rows than page size, we've reached the end
+    if (data.length < SUPABASE_PAGE_SIZE) break;
+    offset += SUPABASE_PAGE_SIZE;
+  }
+
+  return allProducts;
+}
+
+// ------------------------------------------
+// Sync Functions
+// ------------------------------------------
+
+/**
+ * Sync all products for a specific store to Meilisearch.
+ * Fetches all products from Supabase (with pagination) and bulk upserts them.
+ */
+export async function syncStoreProducts(storeId: string): Promise<SyncResult> {
+  const start = Date.now();
+
+  try {
+    const index = getProductsIndex();
+    const documents = await fetchAllProducts(storeId);
+
+    if (documents.length === 0) {
       return {
         success: true,
         indexed: 0,
@@ -53,24 +113,6 @@ export async function syncStoreProducts(storeId: string): Promise<SyncResult> {
         durationMs: Date.now() - start,
       };
     }
-
-    // Transform to MeiliProduct format
-    const documents: MeiliProduct[] = products.map((p) => ({
-      id: p.id,
-      store_id: p.store_id,
-      name: p.name,
-      brand: p.brand,
-      category: p.category,
-      description_seo: p.description_seo,
-      price: p.price,
-      compare_price: p.compare_price,
-      stock_qty: p.stock_qty,
-      is_active: p.is_active,
-      images: (p.images as string[]) ?? [],
-      specs: (p.specs as Record<string, unknown>) ?? {},
-      created_at: p.created_at,
-      updated_at: p.updated_at,
-    }));
 
     // Bulk upsert (addDocuments with existing IDs updates them)
     // Meilisearch processes asynchronously — returns task info immediately
@@ -103,21 +145,10 @@ export async function syncAllProducts(): Promise<SyncResult> {
   const start = Date.now();
 
   try {
-    const supabase = createServiceRoleClient();
     const index = getProductsIndex();
+    const documents = await fetchAllProducts();
 
-    // Fetch all products
-    const { data: products, error } = await supabase
-      .from("products")
-      .select(
-        "id, store_id, name, brand, category, description_seo, price, compare_price, stock_qty, is_active, images, specs, created_at, updated_at"
-      );
-
-    if (error) {
-      throw new Error(`Failed to fetch all products: ${error.message}`);
-    }
-
-    if (!products || products.length === 0) {
+    if (documents.length === 0) {
       return {
         success: true,
         indexed: 0,
@@ -125,23 +156,6 @@ export async function syncAllProducts(): Promise<SyncResult> {
         durationMs: Date.now() - start,
       };
     }
-
-    const documents: MeiliProduct[] = products.map((p) => ({
-      id: p.id,
-      store_id: p.store_id,
-      name: p.name,
-      brand: p.brand,
-      category: p.category,
-      description_seo: p.description_seo,
-      price: p.price,
-      compare_price: p.compare_price,
-      stock_qty: p.stock_qty,
-      is_active: p.is_active,
-      images: (p.images as string[]) ?? [],
-      specs: (p.specs as Record<string, unknown>) ?? {},
-      created_at: p.created_at,
-      updated_at: p.updated_at,
-    }));
 
     // Bulk upsert all products
     await index.addDocuments(documents, {
@@ -175,10 +189,12 @@ export async function removeProduct(productId: string): Promise<void> {
 
 /**
  * Remove all products for a store from Meilisearch.
+ * FIX: Sanitize storeId to prevent Meilisearch filter injection.
  */
 export async function removeStoreProducts(storeId: string): Promise<void> {
   const index = getProductsIndex();
+  const safeStoreId = sanitizeMeiliFilter(storeId);
   await index.deleteDocuments({
-    filter: `store_id = "${storeId}"`,
+    filter: `store_id = "${safeStoreId}"`,
   });
 }

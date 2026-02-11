@@ -5,6 +5,7 @@
 
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { formatCentsToBRL } from "@/lib/utils/format";
+import { sanitizePostgrestFilter } from "@/lib/utils/sanitize";
 import type { ToolContext } from "./index";
 
 export async function executeSearchProducts(
@@ -13,9 +14,9 @@ export async function executeSearchProducts(
 ): Promise<string> {
   const supabase = createServiceRoleClient();
 
-  const query = (input.query as string) ?? "";
-  const category = input.category as string | undefined;
-  const brand = input.brand as string | undefined;
+  const rawQuery = (input.query as string) ?? "";
+  const rawCategory = input.category as string | undefined;
+  const rawBrand = input.brand as string | undefined;
   const maxPrice = input.maxPrice as number | undefined;
   const limit = Math.min((input.limit as number) ?? 5, 10);
 
@@ -29,25 +30,32 @@ export async function executeSearchProducts(
     .gt("stock_qty", 0);
 
   // Category filter
-  if (category) {
-    dbQuery = dbQuery.eq("category", category);
+  if (rawCategory) {
+    dbQuery = dbQuery.eq("category", rawCategory);
   }
 
-  // Brand filter (case-insensitive)
-  if (brand) {
-    dbQuery = dbQuery.ilike("brand", `%${brand}%`);
+  // Brand filter (case-insensitive) — sanitize to prevent filter injection
+  if (rawBrand) {
+    const safeBrand = sanitizePostgrestFilter(rawBrand);
+    if (safeBrand) {
+      dbQuery = dbQuery.ilike("brand", `%${safeBrand}%`);
+    }
   }
 
   // Max price filter (convert reais to centavos)
-  if (maxPrice) {
+  // Use !== undefined instead of truthiness check so maxPrice:0 is not skipped
+  if (maxPrice !== undefined && maxPrice >= 0) {
     dbQuery = dbQuery.lte("price", maxPrice * 100);
   }
 
-  // Text search on name and brand
-  if (query) {
-    dbQuery = dbQuery.or(
-      `name.ilike.%${query}%,brand.ilike.%${query}%,description_seo.ilike.%${query}%`
-    );
+  // Text search on name and brand — sanitize to prevent PostgREST filter injection
+  if (rawQuery) {
+    const safeQuery = sanitizePostgrestFilter(rawQuery);
+    if (safeQuery) {
+      dbQuery = dbQuery.or(
+        `name.ilike.%${safeQuery}%,brand.ilike.%${safeQuery}%,description_seo.ilike.%${safeQuery}%`
+      );
+    }
   }
 
   const { data: products, error } = await dbQuery

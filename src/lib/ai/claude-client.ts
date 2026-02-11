@@ -45,7 +45,8 @@ export interface ProcessMessageResult {
 
 const MAX_TOOL_ITERATIONS = 5;
 const MODEL = "claude-sonnet-4-20250514";
-const MAX_TOKENS = 1024;
+// FIX: Increased from 1024 to 2048 for more complete responses
+const MAX_TOKENS = 2048;
 
 // ------------------------------------------
 // Client
@@ -144,10 +145,18 @@ export async function processMessage(
           toolContext
         );
 
+        // FIX: Safely parse JSON — tool results may not always be valid JSON
+        let parsedOutput: unknown;
+        try {
+          parsedOutput = JSON.parse(result);
+        } catch {
+          parsedOutput = { raw: result };
+        }
+
         toolsUsed.push({
           tool: toolUse.name,
           input: toolUse.input,
-          output: JSON.parse(result),
+          output: parsedOutput,
         });
 
         currentMessages = [
@@ -271,6 +280,8 @@ function buildMessagesFromHistory(
 /**
  * Merge consecutive messages from the same role.
  * Claude API requires alternating user/assistant messages.
+ *
+ * FIX: Preserves image content blocks when merging (previously dropped them).
  */
 function mergeConsecutiveMessages(
   messages: Anthropic.MessageParam[]
@@ -283,29 +294,18 @@ function mergeConsecutiveMessages(
     const last = merged[merged.length - 1];
 
     if (last && last.role === msg.role) {
-      // Merge text content
-      const lastText =
+      // Merge content blocks — preserve all block types (text + image)
+      const lastBlocks: Anthropic.ContentBlockParam[] =
         typeof last.content === "string"
-          ? last.content
-          : last.content
-              .filter(
-                (b): b is Anthropic.TextBlock =>
-                  (b as { type: string }).type === "text"
-              )
-              .map((b) => b.text)
-              .join("\n");
-      const msgText =
-        typeof msg.content === "string"
-          ? msg.content
-          : (msg.content as Anthropic.ContentBlockParam[])
-              .filter(
-                (b): b is Anthropic.TextBlock =>
-                  (b as { type: string }).type === "text"
-              )
-              .map((b) => (b as Anthropic.TextBlock).text)
-              .join("\n");
+          ? [{ type: "text" as const, text: last.content }]
+          : (last.content as Anthropic.ContentBlockParam[]);
 
-      last.content = `${lastText}\n${msgText}`;
+      const msgBlocks: Anthropic.ContentBlockParam[] =
+        typeof msg.content === "string"
+          ? [{ type: "text" as const, text: msg.content }]
+          : (msg.content as Anthropic.ContentBlockParam[]);
+
+      last.content = [...lastBlocks, ...msgBlocks];
     } else {
       merged.push({ ...msg });
     }

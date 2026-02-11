@@ -4,6 +4,7 @@
 // ============================================
 
 import { MeiliSearch, type Index } from "meilisearch";
+import { sanitizeMeiliFilter } from "@/lib/utils/sanitize";
 
 // ------------------------------------------
 // Types
@@ -42,11 +43,18 @@ let _client: MeiliSearch | null = null;
 function getMeiliClient(): MeiliSearch {
   if (_client) return _client;
 
-  const host = process.env.MEILISEARCH_URL;
-  const apiKey = process.env.MEILISEARCH_API_KEY;
+  // FIX: Support both env var naming conventions
+  // .env.local uses NEXT_PUBLIC_MEILISEARCH_HOST / MEILISEARCH_ADMIN_KEY
+  // Code originally used MEILISEARCH_URL / MEILISEARCH_API_KEY
+  const host =
+    process.env.MEILISEARCH_URL ?? process.env.NEXT_PUBLIC_MEILISEARCH_HOST;
+  const apiKey =
+    process.env.MEILISEARCH_API_KEY ?? process.env.MEILISEARCH_ADMIN_KEY;
 
   if (!host) {
-    throw new Error("Missing MEILISEARCH_URL environment variable");
+    throw new Error(
+      "Missing MEILISEARCH_URL or NEXT_PUBLIC_MEILISEARCH_HOST environment variable"
+    );
   }
 
   _client = new MeiliSearch({
@@ -91,18 +99,22 @@ export async function searchProducts(
   const index = getProductsIndex();
   const limit = Math.min(options?.limit ?? 10, 50);
 
-  // Build filter array
-  const filters: string[] = [`store_id = "${storeId}"`, "is_active = true"];
+  // FIX: Sanitize all filter values to prevent Meilisearch filter injection
+  const safeStoreId = sanitizeMeiliFilter(storeId);
+  const filters: string[] = [`store_id = "${safeStoreId}"`, "is_active = true"];
 
   if (options?.category) {
-    filters.push(`category = "${options.category}"`);
+    const safeCategory = sanitizeMeiliFilter(options.category);
+    filters.push(`category = "${safeCategory}"`);
   }
 
   if (options?.brand) {
-    filters.push(`brand = "${options.brand}"`);
+    const safeBrand = sanitizeMeiliFilter(options.brand);
+    filters.push(`brand = "${safeBrand}"`);
   }
 
-  if (options?.maxPrice) {
+  // FIX: Use !== undefined so maxPrice:0 is not skipped
+  if (options?.maxPrice !== undefined && options.maxPrice >= 0) {
     filters.push(`price <= ${options.maxPrice * 100}`);
   }
 

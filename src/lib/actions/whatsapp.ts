@@ -1,11 +1,52 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 export interface ActionResult {
   success: boolean;
   error?: string;
+}
+
+/**
+ * Verify that the current user is authenticated and has access
+ * to the conversation's store via store_members.
+ * Returns the storeId if authorized, or null if not.
+ */
+async function authorizeConversationAccess(
+  conversationId: string
+): Promise<string | null> {
+  // 1. Get authenticated user
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  // 2. Get conversation's store_id using service role (bypasses RLS)
+  const adminClient = createServiceRoleClient();
+  const { data: conversation } = await adminClient
+    .from("whatsapp_conversations")
+    .select("store_id")
+    .eq("id", conversationId)
+    .single();
+
+  if (!conversation) return null;
+
+  // 3. Verify user is a member of this store
+  const { data: membership } = await supabase
+    .from("store_members")
+    .select("store_id")
+    .eq("user_id", user.id)
+    .eq("store_id", conversation.store_id)
+    .limit(1)
+    .maybeSingle();
+
+  if (!membership) return null;
+
+  return conversation.store_id;
 }
 
 /**
@@ -21,6 +62,12 @@ export async function toggleAiActiveAction(
   }
 
   try {
+    // FIX: Verify user is authenticated and authorized for this conversation
+    const storeId = await authorizeConversationAccess(conversationId);
+    if (!storeId) {
+      return { success: false, error: "Não autorizado" };
+    }
+
     const supabase = createServiceRoleClient();
 
     const { error } = await supabase
@@ -29,7 +76,8 @@ export async function toggleAiActiveAction(
         is_ai_active: isAiActive,
         agent_state: isAiActive ? "greeting" : "human_takeover",
       })
-      .eq("id", conversationId);
+      .eq("id", conversationId)
+      .eq("store_id", storeId); // Extra safety: scope to authorized store
 
     if (error) {
       throw new Error(error.message);
@@ -59,6 +107,12 @@ export async function sendManualMessageAction(
   }
 
   try {
+    // FIX: Verify user is authenticated and authorized for this conversation
+    const storeId = await authorizeConversationAccess(conversationId);
+    if (!storeId) {
+      return { success: false, error: "Não autorizado" };
+    }
+
     const supabase = createServiceRoleClient();
 
     // Get conversation details (phone + store for Evolution instance)
@@ -66,6 +120,7 @@ export async function sendManualMessageAction(
       .from("whatsapp_conversations")
       .select("phone, store_id, stores(slug)")
       .eq("id", conversationId)
+      .eq("store_id", storeId) // Extra safety: scope to authorized store
       .single();
 
     if (convError || !conversation) {

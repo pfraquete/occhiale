@@ -24,6 +24,19 @@ export async function executeCreateQuote(
     });
   }
 
+  // FIX: Validate quantities — reject negative, zero, fractional, or excessively large values
+  for (const item of items) {
+    if (
+      !Number.isInteger(item.quantity) ||
+      item.quantity <= 0 ||
+      item.quantity > 100
+    ) {
+      return JSON.stringify({
+        error: `Quantidade inválida para o produto ${item.productId}: ${item.quantity}. A quantidade deve ser um número inteiro entre 1 e 100.`,
+      });
+    }
+  }
+
   const supabase = createServiceRoleClient();
 
   // Fetch products

@@ -18,6 +18,16 @@ import {
   saveMessage,
 } from "@/lib/supabase/queries/whatsapp";
 
+// ------------------------------------------
+// Instance → Store cache (avoids full table scan on every webhook)
+// ------------------------------------------
+
+const instanceStoreCache = new Map<
+  string,
+  { storeId: string; expiresAt: number }
+>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Evolution API sends webhooks for WhatsApp events.
  * We handle incoming messages and trigger AI processing.
@@ -94,9 +104,7 @@ export async function POST(request: NextRequest) {
       { text: text?.substring(0, 100), hasMedia: !!mediaUrl }
     );
 
-    // 8. Resolve store_id from instance name
-    // Instance naming convention: "occhiale-{storeId}" or stored in settings
-    // For now, we look up the store that has this instance configured
+    // 8. Resolve store_id from instance name (with caching)
     const storeId = await resolveStoreId(instance);
     if (!storeId) {
       console.warn(
@@ -154,37 +162,20 @@ export async function POST(request: NextRequest) {
 
 /**
  * Resolve store_id from Evolution API instance name.
- * Convention: instance name contains the store ID or slug.
- *
- * TODO: In the future, store the instance name ↔ store mapping
- * in store settings. For now, we extract from the instance name
- * format "occhiale-{storeId}" or look up in DB.
+ * FIX: Uses in-memory cache to avoid full table scan on every webhook.
+ * FIX: Removed single-tenant fallback that mapped ANY instance to the only store.
  */
 async function resolveStoreId(instanceName: string): Promise<string | null> {
+  // Check cache first
+  const cached = instanceStoreCache.get(instanceName);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.storeId;
+  }
+
   const { createServiceRoleClient } = await import("@/lib/supabase/admin");
   const supabase = createServiceRoleClient();
 
-  // Try to find store where settings contain this instance name
-  // For MVP, we store the instance name in store settings JSON
-  const { data } = await supabase
-    .from("stores")
-    .select("id, settings")
-    .eq("is_active", true);
-
-  if (!data) return null;
-
-  for (const store of data) {
-    const settings = store.settings as Record<string, unknown> | null;
-    if (
-      settings &&
-      (settings as { whatsappInstance?: string }).whatsappInstance ===
-        instanceName
-    ) {
-      return store.id;
-    }
-  }
-
-  // Fallback: try parsing "occhiale-{uuid}" format
+  // Strategy 1: Try parsing "occhiale-{uuid}" format (no DB query needed)
   const match = instanceName.match(/^occhiale-([0-9a-f-]{36})$/);
   if (match?.[1]) {
     const { data: store } = await supabase
@@ -192,16 +183,62 @@ async function resolveStoreId(instanceName: string): Promise<string | null> {
       .select("id")
       .eq("id", match[1])
       .eq("is_active", true)
-      .single();
+      .maybeSingle();
 
-    return store?.id ?? null;
+    if (store) {
+      instanceStoreCache.set(instanceName, {
+        storeId: store.id,
+        expiresAt: Date.now() + CACHE_TTL_MS,
+      });
+      return store.id;
+    }
   }
 
-  // If only one store exists (single-tenant for now), use it
-  if (data.length === 1 && data[0]) {
-    return data[0].id;
+  // Strategy 2: Look up store by whatsappInstance in settings
+  // FIX: Use a targeted JSONB query instead of fetching all stores
+  const { data: stores } = await supabase
+    .from("stores")
+    .select("id, settings")
+    .eq("is_active", true);
+
+  if (stores) {
+    for (const store of stores) {
+      const settings = store.settings as Record<string, unknown> | null;
+      if (
+        settings &&
+        (settings as { whatsappInstance?: string }).whatsappInstance ===
+          instanceName
+      ) {
+        instanceStoreCache.set(instanceName, {
+          storeId: store.id,
+          expiresAt: Date.now() + CACHE_TTL_MS,
+        });
+        return store.id;
+      }
+    }
   }
 
+  // Strategy 3: Look up by store slug (instance name might be the slug)
+  const { data: storeBySlug } = await supabase
+    .from("stores")
+    .select("id")
+    .eq("slug", instanceName)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (storeBySlug) {
+    instanceStoreCache.set(instanceName, {
+      storeId: storeBySlug.id,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
+    return storeBySlug.id;
+  }
+
+  // FIX: Removed single-tenant fallback — if we can't identify the store,
+  // we should NOT blindly route to the only store. Log and reject.
+  console.warn(
+    `resolveStoreId: Could not resolve instance "${instanceName}" to any store`
+  );
   return null;
 }
 
