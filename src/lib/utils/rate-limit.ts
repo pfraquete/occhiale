@@ -110,4 +110,20 @@ export const rateLimiters = {
   /** Auth: 10 requests per minute per IP */
   auth: (ip: string) =>
     rateLimit(`auth:${ip}`, { maxRequests: 10, windowSeconds: 60 }),
+
+  /** AI Product Recognition: 10 requests per minute per IP */
+  aiProductRecognition: (ip: string) =>
+    rateLimit(`ai-product:${ip}`, { maxRequests: 10, windowSeconds: 60 }),
+
+  /** AI Face Measurement: 20 requests per minute per IP */
+  aiFaceMeasurement: (ip: string) =>
+    rateLimit(`ai-face:${ip}`, { maxRequests: 20, windowSeconds: 60 }),
+
+  /** AI Frame Matching: 20 requests per minute per IP */
+  aiFrameMatch: (ip: string) =>
+    rateLimit(`ai-match:${ip}`, { maxRequests: 20, windowSeconds: 60 }),
+
+  /** AI Lens Calibration: 20 requests per minute per IP */
+  aiLensCalibration: (ip: string) =>
+    rateLimit(`ai-lens:${ip}`, { maxRequests: 20, windowSeconds: 60 }),
 };

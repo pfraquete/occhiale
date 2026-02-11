@@ -10,6 +10,9 @@ import { executeCustomerProfile } from "./customer-profile";
 import { executeAnalyzePrescription } from "./analyze-prescription";
 import { executeTrackOrder } from "./track-order";
 import { executeEscalateToHuman } from "./escalate-to-human";
+import { executeFaceMeasurement } from "./face-measurement";
+import { executeRecommendFrames } from "./recommend-frames";
+import { executeCalculateLens } from "./calculate-lens";
 
 // ------------------------------------------
 // Tool Definitions (sent to Claude API)
@@ -143,6 +146,162 @@ export const AI_TOOLS: Anthropic.Tool[] = [
       required: ["reason"],
     },
   },
+
+  // =============================================
+  // NEW: Face Measurement, Frame Recommendation,
+  //      Lens Calibration
+  // =============================================
+
+  {
+    name: "face_measurement",
+    description:
+      "Analisa uma foto do rosto do cliente para medir distância pupilar (DP), DNP, formato do rosto, largura facial e recomendar especificações ideais de armação. Use quando o cliente enviar uma foto do rosto ou pedir para medir/analisar o rosto.",
+    input_schema: {
+      type: "object",
+      properties: {
+        imageUrl: {
+          type: "string",
+          description: "URL da foto do rosto do cliente",
+        },
+      },
+      required: ["imageUrl"],
+    },
+  },
+  {
+    name: "recommend_frames",
+    description:
+      "Recomenda armações do catálogo da loja baseado nas medidas faciais do cliente. Use APÓS obter as medidas com face_measurement. Cruza formato do rosto, DP, largura facial e ponte nasal com as especificações dos produtos para encontrar as melhores opções.",
+    input_schema: {
+      type: "object",
+      properties: {
+        measurements: {
+          type: "object",
+          description:
+            "Objeto completo de medidas faciais retornado por face_measurement",
+          properties: {
+            pd: { type: "number", description: "Distância pupilar (mm)" },
+            dnpRight: { type: "number", description: "DNP direito (mm)" },
+            dnpLeft: { type: "number", description: "DNP esquerdo (mm)" },
+            faceWidth: { type: "number", description: "Largura do rosto (mm)" },
+            faceShape: {
+              type: "string",
+              enum: ["oval", "round", "square", "heart", "oblong"],
+              description: "Formato do rosto",
+            },
+            bridgeWidth: {
+              type: "number",
+              description: "Largura da ponte nasal (mm)",
+            },
+            templeLength: {
+              type: "number",
+              description: "Comprimento da têmpora (mm)",
+            },
+          },
+          required: ["pd", "faceWidth", "faceShape"],
+        },
+        pd: {
+          type: "number",
+          description:
+            "Alternativa: fornecer apenas a DP se não tiver o objeto completo",
+        },
+        faceShape: {
+          type: "string",
+          enum: ["oval", "round", "square", "heart", "oblong"],
+          description: "Formato do rosto (se não usar measurements)",
+        },
+        faceWidth: {
+          type: "number",
+          description: "Largura do rosto em mm (se não usar measurements)",
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "calculate_lens_calibration",
+    description:
+      "Calcula os parâmetros de calibragem e montagem das lentes a partir da receita (prescrição), medidas faciais e especificações da armação escolhida. Retorna: tipo de lente, índice de refração, espessura estimada, descentração, prisma induzido, tratamentos recomendados e relatório para o laboratório. Use quando o cliente tiver receita + medidas + armação escolhida.",
+    input_schema: {
+      type: "object",
+      properties: {
+        prescription: {
+          type: "object",
+          description: "Receita completa (pode vir de analyze_prescription)",
+          properties: {
+            od: {
+              type: "object",
+              properties: {
+                sphere: { type: "number", description: "Esférico OD" },
+                cylinder: { type: "number", description: "Cilíndrico OD" },
+                axis: { type: "number", description: "Eixo OD (0-180)" },
+                addition: { type: "number", description: "Adição OD" },
+              },
+              required: ["sphere"],
+            },
+            os: {
+              type: "object",
+              properties: {
+                sphere: { type: "number", description: "Esférico OE" },
+                cylinder: { type: "number", description: "Cilíndrico OE" },
+                axis: { type: "number", description: "Eixo OE (0-180)" },
+                addition: { type: "number", description: "Adição OE" },
+              },
+              required: ["sphere"],
+            },
+          },
+          required: ["od", "os"],
+        },
+        odSphere: {
+          type: "number",
+          description:
+            "Alternativa: esférico OD direto (se não usar prescription)",
+        },
+        osSphere: {
+          type: "number",
+          description: "Alternativa: esférico OE direto",
+        },
+        odCylinder: { type: "number", description: "Cilíndrico OD" },
+        osCylinder: { type: "number", description: "Cilíndrico OE" },
+        odAxis: { type: "number", description: "Eixo OD" },
+        osAxis: { type: "number", description: "Eixo OE" },
+        odAddition: { type: "number", description: "Adição OD" },
+        osAddition: { type: "number", description: "Adição OE" },
+        face: {
+          type: "object",
+          description: "Medidas faciais (pode vir de face_measurement)",
+          properties: {
+            pd: { type: "number", description: "DP total (mm)" },
+            dnpRight: { type: "number", description: "DNP direito (mm)" },
+            dnpLeft: { type: "number", description: "DNP esquerdo (mm)" },
+            ocHeight: { type: "number", description: "Altura pupilar (mm)" },
+          },
+          required: ["pd", "dnpRight", "dnpLeft"],
+        },
+        pd: { type: "number", description: "Alternativa: DP direto" },
+        dnpRight: { type: "number", description: "DNP direito" },
+        dnpLeft: { type: "number", description: "DNP esquerdo" },
+        frame: {
+          type: "object",
+          description: "Especificações da armação escolhida",
+          properties: {
+            lensWidth: { type: "number", description: "Largura da lente (mm)" },
+            lensHeight: { type: "number", description: "Altura da lente (mm)" },
+            bridgeWidth: { type: "number", description: "Ponte (mm)" },
+            templeLength: { type: "number", description: "Haste (mm)" },
+          },
+          required: ["lensWidth", "lensHeight", "bridgeWidth"],
+        },
+        lensWidth: {
+          type: "number",
+          description: "Alternativa: largura da lente",
+        },
+        lensHeight: { type: "number", description: "Altura da lente" },
+        bridgeWidth: { type: "number", description: "Ponte" },
+        templeLength: { type: "number", description: "Haste" },
+      },
+      required: [],
+    },
+  },
 ];
 
 // ------------------------------------------
@@ -178,6 +337,15 @@ export async function executeTool(
 
     case "escalate_to_human":
       return executeEscalateToHuman(toolInput, context);
+
+    case "face_measurement":
+      return executeFaceMeasurement(toolInput, context);
+
+    case "recommend_frames":
+      return executeRecommendFrames(toolInput, context);
+
+    case "calculate_lens_calibration":
+      return executeCalculateLens(toolInput, context);
 
     default:
       return JSON.stringify({

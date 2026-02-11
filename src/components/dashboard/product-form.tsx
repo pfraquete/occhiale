@@ -48,6 +48,8 @@ export function ProductForm({ storeId, product }: ProductFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [aiResult, setAiResult] = useState<string | null>(null);
 
   const isEditing = !!product;
 
@@ -56,6 +58,7 @@ export function ProductForm({ storeId, product }: ProductFormProps) {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -94,6 +97,89 @@ export function ProductForm({ storeId, product }: ProductFormProps) {
 
   const isActive = watch("isActive");
 
+  // -----------------------------------------------
+  // AI Product Recognition
+  // -----------------------------------------------
+  async function handleAIRecognition() {
+    const images = getValues("images");
+    if (!images || images.length === 0) {
+      setAiResult(
+        "⚠️ Adicione pelo menos uma imagem do produto antes de usar a IA."
+      );
+      return;
+    }
+
+    setAiAnalyzing(true);
+    setAiResult(null);
+
+    try {
+      const response = await fetch("/api/ai/recognize-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          images.length === 1 ? { imageUrl: images[0] } : { imageUrls: images }
+        ),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setAiResult(`❌ ${data.error ?? "Erro ao analisar produto"}`);
+        return;
+      }
+
+      const specs = data.specs;
+
+      // Auto-fill specs
+      if (specs.frameShape) setValue("specs.frameShape", specs.frameShape);
+      if (specs.frameMaterial)
+        setValue("specs.frameMaterial", specs.frameMaterial);
+      if (specs.frameColor) setValue("specs.frameColor", specs.frameColor);
+      if (specs.lensWidth) setValue("specs.lensWidth", specs.lensWidth);
+      if (specs.bridgeWidth) setValue("specs.bridgeWidth", specs.bridgeWidth);
+      if (specs.templeLength)
+        setValue("specs.templeLength", specs.templeLength);
+
+      // Auto-fill category
+      if (specs.suggestedCategory)
+        setValue("category", specs.suggestedCategory);
+
+      // Auto-fill brand if detected and field is empty
+      if (specs.detectedBrand && !getValues("brand")) {
+        setValue("brand", specs.detectedBrand);
+      }
+
+      // Auto-fill name if detected model and field is empty
+      if (specs.detectedModel && !getValues("name")) {
+        setValue("name", specs.detectedModel);
+      }
+
+      // Auto-fill description if empty
+      if (specs.generatedDescription && !getValues("descriptionSeo")) {
+        setValue("descriptionSeo", specs.generatedDescription);
+      }
+
+      // Build success message
+      const parts: string[] = [];
+      if (specs.frameShape) parts.push(`Formato: ${specs.frameShape}`);
+      if (specs.frameMaterial) parts.push(`Material: ${specs.frameMaterial}`);
+      if (specs.frameColor) parts.push(`Cor: ${specs.frameColor}`);
+      if (specs.detectedBrand) parts.push(`Marca: ${specs.detectedBrand}`);
+      if (specs.suggestedCategory)
+        parts.push(`Categoria: ${specs.suggestedCategory}`);
+      if (specs.idealFaceShapes?.length > 0)
+        parts.push(`Rostos ideais: ${specs.idealFaceShapes.join(", ")}`);
+
+      setAiResult(
+        `✅ IA preencheu automaticamente (confiança: ${specs.confidence}):\n${parts.join(" | ")}`
+      );
+    } catch {
+      setAiResult("❌ Erro de conexão ao analisar produto.");
+    } finally {
+      setAiAnalyzing(false);
+    }
+  }
+
   function onSubmit(data: ProductFormValues) {
     setServerError(null);
 
@@ -118,6 +204,87 @@ export function ProductForm({ storeId, product }: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      {/* Images — moved to top so AI can analyze before filling other fields */}
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <h2 className="text-base font-semibold text-text-primary">Imagens</h2>
+        <p className="mt-1 text-xs text-text-tertiary">
+          Insira URLs das imagens (uma por linha). A IA pode analisar as fotos e
+          preencher automaticamente as especificações.
+        </p>
+        <div className="mt-4">
+          <Textarea
+            rows={3}
+            placeholder={
+              "https://exemplo.com/imagem1.jpg\nhttps://exemplo.com/imagem2.jpg"
+            }
+            defaultValue={product?.images?.join("\n") ?? ""}
+            onChange={(e) => {
+              const urls = e.target.value
+                .split("\n")
+                .map((url) => url.trim())
+                .filter(Boolean);
+              setValue("images", urls);
+            }}
+          />
+          {errors.images && (
+            <p className="mt-1 text-xs text-danger">{errors.images.message}</p>
+          )}
+        </div>
+
+        {/* AI Recognition Button */}
+        <div className="mt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={aiAnalyzing}
+            onClick={handleAIRecognition}
+            className="gap-2 border-brand-500 text-brand-500 hover:bg-brand-50"
+          >
+            {aiAnalyzing ? (
+              <>
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+                Analisando com IA...
+              </>
+            ) : (
+              <>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+                Preencher com IA
+              </>
+            )}
+          </Button>
+          <span className="ml-3 text-xs text-text-tertiary">
+            A IA analisa as fotos e preenche formato, material, medidas,
+            categoria e descrição
+          </span>
+        </div>
+
+        {aiResult && (
+          <div
+            className={`mt-3 whitespace-pre-line rounded-lg px-4 py-3 text-sm ${
+              aiResult.startsWith("✅")
+                ? "bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                : aiResult.startsWith("⚠️")
+                  ? "bg-yellow-50 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300"
+                  : "bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300"
+            }`}
+          >
+            {aiResult}
+          </div>
+        )}
+      </div>
+
       {/* Basic info */}
       <div className="rounded-xl border border-border bg-surface p-5">
         <h2 className="text-base font-semibold text-text-primary">
@@ -232,7 +399,7 @@ export function ProductForm({ storeId, product }: ProductFormProps) {
           Especificações Ópticas
         </h2>
         <p className="mt-1 text-xs text-text-tertiary">
-          Campos opcionais para óculos e armações.
+          Campos preenchidos automaticamente pela IA ou manualmente.
         </p>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
@@ -300,34 +467,6 @@ export function ProductForm({ storeId, product }: ProductFormProps) {
               {...register("specs.templeLength", { valueAsNumber: true })}
             />
           </div>
-        </div>
-      </div>
-
-      {/* Images */}
-      <div className="rounded-xl border border-border bg-surface p-5">
-        <h2 className="text-base font-semibold text-text-primary">Imagens</h2>
-        <p className="mt-1 text-xs text-text-tertiary">
-          Insira URLs das imagens (uma por linha). Upload será disponível em
-          breve.
-        </p>
-        <div className="mt-4">
-          <Textarea
-            rows={3}
-            placeholder={
-              "https://exemplo.com/imagem1.jpg\nhttps://exemplo.com/imagem2.jpg"
-            }
-            defaultValue={product?.images?.join("\n") ?? ""}
-            onChange={(e) => {
-              const urls = e.target.value
-                .split("\n")
-                .map((url) => url.trim())
-                .filter(Boolean);
-              setValue("images", urls);
-            }}
-          />
-          {errors.images && (
-            <p className="mt-1 text-xs text-danger">{errors.images.message}</p>
-          )}
         </div>
       </div>
 

@@ -602,6 +602,176 @@ export type Database = {
           },
         ];
       };
+      face_measurements: {
+        Row: {
+          id: string;
+          store_id: string;
+          customer_id: string | null;
+          phone: string | null;
+          pd: number;
+          dnp_right: number;
+          dnp_left: number;
+          face_width: number | null;
+          bridge_width: number | null;
+          temple_length: number | null;
+          face_shape: string | null;
+          confidence: string | null;
+          has_reference_card: boolean;
+          image_url: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          customer_id?: string | null;
+          phone?: string | null;
+          pd: number;
+          dnp_right: number;
+          dnp_left: number;
+          face_width?: number | null;
+          bridge_width?: number | null;
+          temple_length?: number | null;
+          face_shape?: string | null;
+          confidence?: string | null;
+          has_reference_card?: boolean;
+          image_url?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          store_id?: string;
+          customer_id?: string | null;
+          phone?: string | null;
+          pd?: number;
+          dnp_right?: number;
+          dnp_left?: number;
+          face_width?: number | null;
+          bridge_width?: number | null;
+          temple_length?: number | null;
+          face_shape?: string | null;
+          confidence?: string | null;
+          has_reference_card?: boolean;
+          image_url?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "face_measurements_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "face_measurements_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lens_calibrations: {
+        Row: {
+          id: string;
+          store_id: string;
+          customer_id: string | null;
+          order_id: string | null;
+          phone: string | null;
+          prescription: Json;
+          face_measurements: Json;
+          frame_specs: Json;
+          product_id: string | null;
+          lens_type: string;
+          refractive_index: number;
+          refractive_index_name: string | null;
+          minimum_blank_size: number | null;
+          decentration: number | null;
+          od_result: Json;
+          os_result: Json;
+          treatments: Json | null;
+          warnings: string[] | null;
+          lab_summary: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          customer_id?: string | null;
+          order_id?: string | null;
+          phone?: string | null;
+          prescription: Json;
+          face_measurements: Json;
+          frame_specs: Json;
+          product_id?: string | null;
+          lens_type: string;
+          refractive_index: number;
+          refractive_index_name?: string | null;
+          minimum_blank_size?: number | null;
+          decentration?: number | null;
+          od_result: Json;
+          os_result: Json;
+          treatments?: Json | null;
+          warnings?: string[] | null;
+          lab_summary?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          store_id?: string;
+          customer_id?: string | null;
+          order_id?: string | null;
+          phone?: string | null;
+          prescription?: Json;
+          face_measurements?: Json;
+          frame_specs?: Json;
+          product_id?: string | null;
+          lens_type?: string;
+          refractive_index?: number;
+          refractive_index_name?: string | null;
+          minimum_blank_size?: number | null;
+          decentration?: number | null;
+          od_result?: Json;
+          os_result?: Json;
+          treatments?: Json | null;
+          warnings?: string[] | null;
+          lab_summary?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lens_calibrations_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lens_calibrations_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lens_calibrations_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lens_calibrations_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       whatsapp_messages: {
         Row: {
           content: string;
