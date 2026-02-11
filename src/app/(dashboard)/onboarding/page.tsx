@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createStoreAction, checkSlugAvailability } from "@/lib/actions/store";
 import { Store, Loader2, CheckCircle2, XCircle } from "lucide-react";
@@ -26,20 +26,28 @@ export default function OnboardingPage() {
   const [slugStatus, setSlugStatus] = useState<
     "idle" | "checking" | "available" | "taken"
   >("idle");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounced slug check
-  const checkSlug = useCallback(async (value: string) => {
+  // Debounced slug availability check (300ms)
+  const checkSlugDebounced = useCallback((value: string) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
     if (value.length < 3) {
       setSlugStatus("idle");
       return;
     }
+
     setSlugStatus("checking");
-    try {
-      const result = await checkSlugAvailability(value);
-      setSlugStatus(result.available ? "available" : "taken");
-    } catch {
-      setSlugStatus("idle");
-    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const result = await checkSlugAvailability(value);
+        setSlugStatus(result.available ? "available" : "taken");
+      } catch {
+        setSlugStatus("idle");
+      }
+    }, 300);
   }, []);
 
   function handleNameChange(value: string) {
@@ -47,7 +55,7 @@ export default function OnboardingPage() {
     if (!slugManuallyEdited) {
       const newSlug = slugify(value);
       setSlug(newSlug);
-      checkSlug(newSlug);
+      checkSlugDebounced(newSlug);
     }
   }
 
@@ -58,7 +66,7 @@ export default function OnboardingPage() {
       .slice(0, 50);
     setSlug(sanitized);
     setSlugManuallyEdited(true);
-    checkSlug(sanitized);
+    checkSlugDebounced(sanitized);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

@@ -36,22 +36,18 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Protect dashboard routes — redirect unauthenticated users to login
-  if (!user && pathname.startsWith("/dashboard")) {
+  // Protected routes that require authentication
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding");
+
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Protect onboarding route — redirect unauthenticated users to login
-  if (!user && pathname.startsWith("/onboarding")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  // For authenticated users accessing dashboard, check if they have a store
-  if (user && pathname.startsWith("/dashboard")) {
+  // For authenticated users on protected routes, check store membership once
+  if (user && isProtectedRoute) {
     const { data: membership } = await supabase
       .from("store_members")
       .select("store_id")
@@ -59,24 +55,17 @@ export async function updateSession(request: NextRequest) {
       .limit(1)
       .maybeSingle();
 
-    // No store → redirect to onboarding
-    if (!membership) {
+    const hasStore = !!membership;
+
+    // No store + on dashboard → redirect to onboarding
+    if (!hasStore && pathname.startsWith("/dashboard")) {
       const url = request.nextUrl.clone();
       url.pathname = "/onboarding";
       return NextResponse.redirect(url);
     }
-  }
 
-  // If user already has a store and visits onboarding, redirect to dashboard
-  if (user && pathname.startsWith("/onboarding")) {
-    const { data: membership } = await supabase
-      .from("store_members")
-      .select("store_id")
-      .eq("user_id", user.id)
-      .limit(1)
-      .maybeSingle();
-
-    if (membership) {
+    // Has store + on onboarding → redirect to dashboard
+    if (hasStore && pathname.startsWith("/onboarding")) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return NextResponse.redirect(url);

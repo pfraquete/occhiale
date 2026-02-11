@@ -8,7 +8,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES
   ('product-images', 'product-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp']),
   ('prescriptions', 'prescriptions', false, 10485760, ARRAY['image/jpeg', 'image/png', 'application/pdf']),
-  ('store-assets', 'store-assets', false, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'])
+  ('store-assets', 'store-assets', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'])
 ON CONFLICT (id) DO NOTHING;
 
 -- ===== PRODUCT-IMAGES POLICIES =====
@@ -88,16 +88,10 @@ CREATE POLICY "prescriptions_admin_delete"
 
 -- ===== STORE-ASSETS POLICIES =====
 
--- Store members can view assets
-CREATE POLICY "store_assets_member_select"
+-- Public can view store assets (logos, branding)
+CREATE POLICY "store_assets_public_select"
   ON storage.objects FOR SELECT
-  USING (
-    bucket_id = 'store-assets'
-    AND (storage.foldername(name))[1] IN (
-      SELECT id::text FROM stores
-      WHERE id IN (SELECT store_id FROM public.user_store_ids())
-    )
-  );
+  USING (bucket_id = 'store-assets');
 
 -- Store owner/admin can upload assets
 CREATE POLICY "store_assets_admin_insert"

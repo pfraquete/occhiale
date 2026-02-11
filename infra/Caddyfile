@@ -13,16 +13,7 @@
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
 		Referrer-Policy strict-origin-when-cross-origin
-	}
-
-	# Rate limiting for webhook endpoints
-	@webhooks path /webhook/*
-	rate_limit @webhooks {
-		zone webhooks {
-			key {remote_host}
-			events 100
-			window 1m
-		}
+		-Server
 	}
 
 	log {
@@ -42,6 +33,7 @@
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
 		Referrer-Policy strict-origin-when-cross-origin
+		-Server
 	}
 
 	log {
