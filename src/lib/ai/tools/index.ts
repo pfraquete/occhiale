@@ -164,7 +164,7 @@ export const AI_TOOLS: Anthropic.Tool[] = [
           description: "URL da foto do rosto do cliente",
         },
       },
-      required: ["imageUrl"],
+      required: [],
     },
   },
   {
@@ -310,6 +310,7 @@ export const AI_TOOLS: Anthropic.Tool[] = [
 
 export interface ToolContext {
   storeId: string;
+  storeSlug?: string;
   conversationId: string;
   phone: string;
 }

@@ -184,6 +184,26 @@ export class EvolutionClient {
   }
 
   /**
+   * Send a video message.
+   */
+  async sendVideo(
+    instance: string,
+    to: string,
+    videoUrl: string,
+    caption?: string
+  ): Promise<void> {
+    const payload = {
+      number: to,
+      mediatype: "video",
+      mimetype: "video/mp4",
+      caption,
+      media: videoUrl,
+    };
+
+    await this.request("POST", `/message/sendMedia/${instance}`, payload);
+  }
+
+  /**
    * Send a message with quick-reply buttons (max 3).
    */
   async sendButtons(

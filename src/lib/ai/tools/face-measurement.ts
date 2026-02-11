@@ -7,23 +7,46 @@
 import { analyzeFacePhoto } from "@/lib/ai/face-measurement";
 import type { ToolContext } from "./index";
 
+/**
+ * Tutorial video URL for face measurement instructions.
+ * The video shows how to hold a credit card next to the face
+ * for accurate AI measurements.
+ *
+ * This is set at deploy time via env var or defaults to the
+ * public path on the storefront.
+ */
+const TUTORIAL_VIDEO_PATH = "/videos/tutorial-medicao-facial.mp4";
+
 export async function executeFaceMeasurement(
   input: Record<string, unknown>,
-  _context: ToolContext
+  context: ToolContext
 ): Promise<string> {
   const imageUrl = input.imageUrl as string | undefined;
 
   if (!imageUrl) {
+    // No image provided — send tutorial video and instructions
+    const storeSlug = context.storeSlug ?? "";
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ?? "https://occhiale.com.br";
+    const tutorialVideoUrl = `${baseUrl}${storeSlug ? `/${storeSlug}` : ""}${TUTORIAL_VIDEO_PATH}`;
+
     return JSON.stringify({
       error:
-        "URL da imagem não fornecida. Peça ao cliente para enviar uma foto frontal do rosto.",
-      instructions: [
-        "Olhe diretamente para a câmera",
-        "Mantenha o rosto reto (sem inclinar)",
-        "Boa iluminação frontal",
-        "Remova óculos, se estiver usando",
-        "Segure um cartão de crédito na testa para maior precisão (opcional)",
-      ],
+        "O cliente ainda não enviou a foto. Envie o vídeo tutorial e as instruções abaixo.",
+      sendVideo: {
+        url: tutorialVideoUrl,
+        caption: "📐 Tutorial: Como tirar a foto para medição facial com IA",
+      },
+      message:
+        "Para encontrar o óculos perfeito para você, preciso de uma foto do seu rosto! 📸\n\n" +
+        "Assista o vídeo acima e siga os passos:\n\n" +
+        "1️⃣ Pegue um cartão de crédito (ou qualquer cartão de plástico)\n" +
+        "2️⃣ Posicione ao lado do rosto, na altura dos olhos\n" +
+        "3️⃣ Segure firme rente à têmpora\n" +
+        "4️⃣ Tire uma selfie de frente, olhando direto pra câmera\n" +
+        "5️⃣ Envie a foto aqui!\n\n" +
+        "💡 O cartão serve como referência de tamanho para medições mais precisas (±1mm).\n" +
+        "Sem o cartão, a precisão é de ±3mm — ainda funciona bem!",
     });
   }
 

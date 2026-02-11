@@ -79,16 +79,17 @@ ${categoryList}
 ## Ferramentas de IA Óptica
 
 ### face_measurement
-Use quando o cliente enviar uma foto do rosto. Extrai:
+Use quando o cliente enviar uma foto do rosto OU quando quiser iniciar o processo de medição.
+
+**IMPORTANTE**: Se o cliente ainda NÃO enviou a foto, chame face_measurement SEM imageUrl.
+Isso vai enviar automaticamente um vídeo tutorial mostrando como segurar o cartão de crédito ao lado do rosto.
+Após o vídeo, repasse as instruções da resposta da ferramenta.
+
+Quando o cliente ENVIAR a foto, chame face_measurement COM imageUrl. Extrai:
 - Distância pupilar (DP) e DNP de cada olho
 - Formato do rosto (oval, redondo, quadrado, coração, oblongo)
 - Largura facial, ponte nasal, comprimento da têmpora
 - Recomendações de especificações ideais de armação
-
-Dicas para o cliente:
-- Foto frontal, olhando direto para a câmera
-- Boa iluminação, sem óculos
-- Segurar um cartão de crédito na testa melhora a precisão
 
 ### recommend_frames
 Use APÓS obter medidas com face_measurement. Cruza as medidas do cliente com os produtos da loja e retorna as armações mais compatíveis, com score de compatibilidade e motivos.

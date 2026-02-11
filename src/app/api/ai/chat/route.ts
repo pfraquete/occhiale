@@ -188,6 +188,30 @@ export async function POST(request: NextRequest) {
     // 11. Send response via Evolution API
     try {
       const evolution = getEvolutionClient();
+
+      // Check if any tool result requested sending a video (e.g., face measurement tutorial)
+      for (const tool of result.toolsUsed) {
+        const output = tool.output as Record<string, unknown> | undefined;
+        if (output?.sendVideo) {
+          const videoData = output.sendVideo as {
+            url: string;
+            caption?: string;
+          };
+          try {
+            await evolution.sendVideo(
+              instanceName,
+              phone,
+              videoData.url,
+              videoData.caption
+            );
+            // Small delay so video arrives before text
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+          } catch (videoError) {
+            console.error("Failed to send tutorial video:", videoError);
+          }
+        }
+      }
+
       await evolution.sendText(instanceName, phone, result.responseText);
     } catch (sendError) {
       console.error("Failed to send WhatsApp message:", sendError);

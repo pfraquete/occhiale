@@ -101,6 +101,7 @@ export async function processMessage(
 
   const toolContext: ToolContext = {
     storeId: params.storeId,
+    storeSlug: params.storeSlug,
     conversationId: params.conversationId,
     phone: params.phone,
   };
