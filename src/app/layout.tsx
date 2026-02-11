@@ -1,5 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
+import { CookieBanner } from "@/components/lgpd/cookie-banner";
+import { PostHogProvider } from "@/components/analytics/posthog-provider";
+import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
 import "./globals.css";
 
 const inter = Inter({
@@ -19,6 +23,12 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  themeColor: "#18181b",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: {
@@ -46,6 +56,7 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     siteName: "Occhiale",
   },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -59,6 +70,11 @@ export default function RootLayout({
         className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
+        <CookieBanner />
+        <Suspense fallback={null}>
+          <PostHogProvider />
+        </Suspense>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

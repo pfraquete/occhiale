@@ -48,12 +48,14 @@ export default async function CustomersPage({ searchParams }: PageProps) {
         <CustomersFilters />
       </Suspense>
 
-      <CustomersTable
-        customers={customers}
-        total={total}
-        page={page}
-        perPage={perPage}
-      />
+      <Suspense fallback={null}>
+        <CustomersTable
+          customers={customers}
+          total={total}
+          page={page}
+          perPage={perPage}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -4,6 +4,10 @@
     {
       "path": "/api/meilisearch/cron",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/crm/process",
+      "schedule": "0 * * * *"
     }
   ]
 }

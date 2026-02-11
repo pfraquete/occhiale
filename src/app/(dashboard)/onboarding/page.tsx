@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createStoreAction, checkSlugAvailability } from "@/lib/actions/store";
