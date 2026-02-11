@@ -1,0 +1,159 @@
+# ============================================
+# OCCHIALE - VPS Docker Compose
+# Services: Evolution API v2, Redis, PostgreSQL (Evolution), Meilisearch
+# ============================================
+
+services:
+  # ------------------------------------------
+  # Evolution API v2 — WhatsApp via Baileys
+  # ------------------------------------------
+  evolution-api:
+    image: atendai/evolution-api:v2.2.3
+    container_name: occhiale-evolution
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Server
+      SERVER_URL: ${EVOLUTION_SERVER_URL:-http://localhost:8080}
+      SERVER_PORT: 8080
+
+      # Authentication
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: "true"
+
+      # Database (PostgreSQL)
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:${POSTGRES_EVOLUTION_PASSWORD}@postgres-evolution:5432/evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
+      DATABASE_SAVE_MESSAGE_UPDATE: "true"
+      DATABASE_SAVE_DATA_CONTACTS: "true"
+      DATABASE_SAVE_DATA_CHATS: "true"
+
+      # Cache (Redis)
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379/0
+      CACHE_REDIS_PREFIX_KEY: evolution
+      CACHE_REDIS_SAVE_INSTANCES: "true"
+      CACHE_LOCAL_ENABLED: "false"
+
+      # Webhooks
+      WEBHOOK_GLOBAL_ENABLED: "false"
+      WEBHOOK_GLOBAL_URL: ""
+      WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS: "false"
+      WEBHOOK_EVENTS_APPLICATION_STARTUP: "false"
+      WEBHOOK_EVENTS_QRCODE_UPDATED: "true"
+      WEBHOOK_EVENTS_MESSAGES_SET: "true"
+      WEBHOOK_EVENTS_MESSAGES_UPSERT: "true"
+      WEBHOOK_EVENTS_MESSAGES_UPDATE: "true"
+      WEBHOOK_EVENTS_MESSAGES_DELETE: "false"
+      WEBHOOK_EVENTS_SEND_MESSAGE: "true"
+      WEBHOOK_EVENTS_CONTACTS_SET: "false"
+      WEBHOOK_EVENTS_CONTACTS_UPSERT: "false"
+      WEBHOOK_EVENTS_CONTACTS_UPDATE: "false"
+      WEBHOOK_EVENTS_PRESENCE_UPDATE: "false"
+      WEBHOOK_EVENTS_CHATS_SET: "false"
+      WEBHOOK_EVENTS_CHATS_UPSERT: "false"
+      WEBHOOK_EVENTS_CHATS_UPDATE: "false"
+      WEBHOOK_EVENTS_CHATS_DELETE: "false"
+      WEBHOOK_EVENTS_GROUPS_UPSERT: "false"
+      WEBHOOK_EVENTS_GROUPS_UPDATE: "false"
+      WEBHOOK_EVENTS_GROUP_PARTICIPANTS_UPDATE: "false"
+      WEBHOOK_EVENTS_CONNECTION_UPDATE: "true"
+      WEBHOOK_EVENTS_CALL: "false"
+
+      # Instance (Baileys — QR Code connection)
+      CONFIG_SESSION_PHONE_CLIENT: OCCHIALE
+      CONFIG_SESSION_PHONE_NAME: Chrome
+
+      # Logging
+      LOG_LEVEL: WARN
+      DEL_INSTANCE: "false"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres-evolution:
+        condition: service_healthy
+    volumes:
+      - evolution_instances:/evolution/instances
+    networks:
+      - occhiale-net
+
+  # ------------------------------------------
+  # Redis — Cache & session store
+  # ------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: occhiale-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
+    networks:
+      - occhiale-net
+
+  # ------------------------------------------
+  # PostgreSQL — Evolution API database (separate from Supabase)
+  # ------------------------------------------
+  postgres-evolution:
+    image: postgres:16-alpine
+    container_name: occhiale-postgres-evolution
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: evolution
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${POSTGRES_EVOLUTION_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution -d evolution"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_evolution_data:/var/lib/postgresql/data
+    networks:
+      - occhiale-net
+
+  # ------------------------------------------
+  # Meilisearch — Typo-tolerant search engine
+  # ------------------------------------------
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    container_name: occhiale-meilisearch
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY}
+      MEILI_ENV: production
+      MEILI_MAX_INDEXING_MEMORY: 512MiB
+      MEILI_LOG_LEVEL: WARN
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - occhiale-net
+
+volumes:
+  evolution_instances:
+  redis_data:
+  postgres_evolution_data:
+  meilisearch_data:
+
+networks:
+  occhiale-net:
+    driver: bridge

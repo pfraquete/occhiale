@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code
+.claude/
+
+# windows artifacts
+nul
+
+# infra secrets (keep .env.example)
+infra/.env
+!infra/.env.example

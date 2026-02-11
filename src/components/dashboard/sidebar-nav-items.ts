@@ -3,6 +3,7 @@ import {
   ShoppingBag,
   Package,
   Users,
+  MessageSquare,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -33,6 +34,11 @@ export const sidebarNavItems: NavItem[] = [
     label: "Clientes",
     href: "/dashboard/clientes",
     icon: Users,
+  },
+  {
+    label: "WhatsApp",
+    href: "/dashboard/whatsapp",
+    icon: MessageSquare,
   },
   {
     label: "Configurações",

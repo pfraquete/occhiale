@@ -216,11 +216,12 @@ export interface LensConfig {
 export type AgentState =
   | "idle"
   | "greeting"
-  | "consulting"
-  | "quoting"
-  | "closing"
-  | "post_sale"
-  | "escalated_human";
+  | "browsing"
+  | "recommending"
+  | "prescription"
+  | "checkout"
+  | "support"
+  | "human_takeover";
 
 export interface WhatsAppConversation {
   id: string;
@@ -230,7 +231,18 @@ export interface WhatsAppConversation {
   agentState: AgentState;
   sentiment?: "positive" | "neutral" | "negative";
   lastMessageAt: string;
-  isEscalated: boolean;
+  isAiActive: boolean;
+  createdAt: string;
+}
+
+export interface WhatsAppMessage {
+  id: string;
+  conversationId: string;
+  role: "customer" | "assistant" | "system";
+  content: string;
+  mediaUrl?: string;
+  mediaType?: string;
+  toolCalls?: Record<string, unknown>[];
   createdAt: string;
 }
 

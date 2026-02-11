@@ -101,10 +101,10 @@ export function DropdownMenuContent({
       {typeof children === "object" && Array.isArray(children)
         ? children.map((child) => {
             if (!child || typeof child !== "object") return child;
-            // @ts-expect-error -- pass onClose to items
+            const el = child as React.ReactElement<{ onClose?: () => void }>;
             return {
-              ...child,
-              props: { ...(child as React.ReactElement).props, onClose },
+              ...el,
+              props: { ...el.props, onClose },
             };
           })
         : children}

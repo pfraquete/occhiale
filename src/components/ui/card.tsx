@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type CardProps = React.HTMLAttributes<HTMLDivElement>;
+export type CardProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function Card({ className, ...props }: CardProps) {
   return (
@@ -14,7 +14,7 @@ export function Card({ className, ...props }: CardProps) {
   );
 }
 
-type CardHeaderProps = React.HTMLAttributes<HTMLDivElement>;
+export type CardHeaderProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function CardHeader({ className, ...props }: CardHeaderProps) {
   return (
@@ -25,7 +25,7 @@ export function CardHeader({ className, ...props }: CardHeaderProps) {
   );
 }
 
-type CardTitleProps = React.HTMLAttributes<HTMLHeadingElement>;
+export type CardTitleProps = React.HTMLAttributes<HTMLHeadingElement>;
 
 export function CardTitle({ className, ...props }: CardTitleProps) {
   return (
@@ -36,7 +36,7 @@ export function CardTitle({ className, ...props }: CardTitleProps) {
   );
 }
 
-type CardDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
+export type CardDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
 export function CardDescription({ className, ...props }: CardDescriptionProps) {
   return (
@@ -44,13 +44,13 @@ export function CardDescription({ className, ...props }: CardDescriptionProps) {
   );
 }
 
-type CardContentProps = React.HTMLAttributes<HTMLDivElement>;
+export type CardContentProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function CardContent({ className, ...props }: CardContentProps) {
   return <div className={cn("p-6 pt-0", className)} {...props} />;
 }
 
-type CardFooterProps = React.HTMLAttributes<HTMLDivElement>;
+export type CardFooterProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function CardFooter({ className, ...props }: CardFooterProps) {
   return (

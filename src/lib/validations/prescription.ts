@@ -18,6 +18,23 @@ export const prescriptionSchema = z.object({
 
 export type PrescriptionInput = z.infer<typeof prescriptionSchema>;
 
+// === OCR Result Schema ===
+// Output from Claude Vision prescription analysis
+
+export const ocrPrescriptionResultSchema = z.object({
+  od: prescriptionEyeSchema,
+  os: prescriptionEyeSchema,
+  addition: z.number().min(0.5).max(4).multipleOf(0.25).optional().nullable(),
+  dnp: z.number().min(45).max(80).optional().nullable(),
+  doctorName: z.string().optional().nullable(),
+  doctorCrm: z.string().optional().nullable(),
+  date: z.string().optional().nullable(),
+  confidence: z.enum(["high", "medium", "low"]),
+  notes: z.string().optional().nullable(),
+});
+
+export type OcrPrescriptionResult = z.infer<typeof ocrPrescriptionResultSchema>;
+
 // Validation helpers
 export function isPrescriptionExpired(date: string): boolean {
   const prescriptionDate = new Date(date);
