@@ -6,6 +6,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import crypto from "crypto";
+import { rateLimiters } from "@/lib/utils/rate-limit";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { processMessage } from "@/lib/ai/claude-client";
 import { getEvolutionClient } from "@/lib/evolution/client";
@@ -41,6 +42,18 @@ function timingSafeCompare(a: string, b: string): boolean {
  */
 export async function POST(request: NextRequest) {
   try {
+    // 0. Rate limiting per store (extracted after auth)
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    const { allowed } = rateLimiters.aiChat(ip);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded" },
+        { status: 429 }
+      );
+    }
+
     // 1. Verify internal auth
     const expectedKey = process.env.EVOLUTION_API_KEY;
 

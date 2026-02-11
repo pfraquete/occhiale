@@ -1,17 +1,20 @@
 // ============================================
 // OCCHIALE - Checkout API Route
-// POST: validates → re-validates prices → creates customer
-//       → creates order → charges Pagar.me → returns payment data
+// POST: validates → re-validates prices → decrements stock atomically
+//       → creates customer → creates order → charges Pagar.me
+//       → rollback stock on failure
 // ============================================
 
 import { NextResponse, type NextRequest } from "next/server";
 import { checkoutSchema } from "@/lib/validations/checkout";
+import { rateLimiters } from "@/lib/utils/rate-limit";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { findOrCreateCustomer } from "@/lib/supabase/queries/customers";
 import {
   createOrder,
   setOrderPaymentId,
   decrementStock,
+  restoreStock,
 } from "@/lib/supabase/queries/orders";
 import type { Json } from "@/lib/types/database";
 import { createPagarmeClient, PagarmeError } from "@/lib/pagarme/client";
@@ -25,6 +28,27 @@ import type {
 } from "@/lib/pagarme/types";
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { allowed, resetAt } = rateLimiters.checkout(ip);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Muitas tentativas. Tente novamente em alguns minutos." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)),
+          "X-RateLimit-Remaining": "0",
+        },
+      }
+    );
+  }
+
+  // Track stock changes for rollback
+  let stockDecremented = false;
+  let stockItems: { productId: string; quantity: number }[] = [];
+
   try {
     // 1. Parse and validate body
     const body = await request.json();
@@ -83,15 +107,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (product.stock_qty < item.quantity) {
-        return NextResponse.json(
-          {
-            error: `Estoque insuficiente para ${product.name} (disponível: ${product.stock_qty})`,
-          },
-          { status: 400 }
-        );
-      }
-
       // Re-validate price matches DB
       if (product.price !== item.unitPrice) {
         return NextResponse.json(
@@ -130,13 +145,36 @@ export async function POST(request: NextRequest) {
     const shippingCost = isFreeShipping ? 0 : defaultShippingCost;
     const total = subtotal + shippingCost;
 
-    // 4. Decrement stock
-    await decrementStock(
-      input.items.map((i) => ({
-        productId: i.productId,
-        quantity: i.quantity,
-      }))
-    );
+    // 4. Atomically decrement stock BEFORE creating order
+    stockItems = input.items.map((i) => ({
+      productId: i.productId,
+      quantity: i.quantity,
+    }));
+
+    const { insufficientStock } = await decrementStock(stockItems);
+
+    if (insufficientStock.length > 0) {
+      // Restore stock for items that were successfully decremented
+      const successfulItems = stockItems.filter(
+        (item) => !insufficientStock.includes(item.productId)
+      );
+      if (successfulItems.length > 0) {
+        await restoreStock(successfulItems);
+      }
+
+      const outOfStockNames = insufficientStock
+        .map((id) => productMap.get(id)?.name ?? id)
+        .join(", ");
+
+      return NextResponse.json(
+        {
+          error: `Estoque insuficiente para: ${outOfStockNames}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    stockDecremented = true;
 
     // 5. Find or create customer
     const customer = await findOrCreateCustomer({
@@ -244,6 +282,10 @@ export async function POST(request: NextRequest) {
 
       case "credit_card": {
         if (!input.creditCard) {
+          // Rollback stock since we already decremented
+          await restoreStock(stockItems);
+          stockDecremented = false;
+
           return NextResponse.json(
             { error: "Dados do cartão não informados" },
             { status: 400 }
@@ -285,7 +327,27 @@ export async function POST(request: NextRequest) {
 
     // 8. Post to Pagar.me
     const pagarme = createPagarmeClient();
-    const pagarmeResponse = await pagarme.createOrder(pagarmeOrder);
+    let pagarmeResponse;
+
+    try {
+      pagarmeResponse = await pagarme.createOrder(pagarmeOrder);
+    } catch (pagarmeError) {
+      // Payment failed → rollback stock
+      console.error("Pagar.me error, rolling back stock:", pagarmeError);
+      await restoreStock(stockItems);
+      stockDecremented = false;
+
+      if (pagarmeError instanceof PagarmeError) {
+        return NextResponse.json(
+          {
+            error: "Erro no processamento do pagamento",
+            details: pagarmeError.message,
+          },
+          { status: 502 }
+        );
+      }
+      throw pagarmeError;
+    }
 
     // 9. Save Pagar.me order ID to our order
     await setOrderPaymentId(orderResult.orderId, pagarmeResponse.id);
@@ -329,6 +391,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(responseData, { status: 201 });
   } catch (error) {
     console.error("Checkout error:", error);
+
+    // Rollback stock on any unhandled error
+    if (stockDecremented && stockItems.length > 0) {
+      try {
+        await restoreStock(stockItems);
+      } catch (rollbackError) {
+        console.error("CRITICAL: Failed to rollback stock:", rollbackError);
+      }
+    }
 
     if (error instanceof PagarmeError) {
       return NextResponse.json(

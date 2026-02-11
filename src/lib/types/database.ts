@@ -610,6 +610,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      decrement_stock: {
+        Args: { p_product_id: string; p_quantity: number };
+        Returns: boolean;
+      };
+      restore_stock: {
+        Args: { p_product_id: string; p_quantity: number };
+        Returns: undefined;
+      };
       user_is_owner_or_admin: {
         Args: { p_store_id: string };
         Returns: boolean;

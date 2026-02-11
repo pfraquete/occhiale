@@ -9,6 +9,7 @@ const settingsLinks = [
   { href: "/dashboard/configuracoes/pagamentos", label: "Pagamentos" },
   { href: "/dashboard/configuracoes/frete", label: "Frete" },
   { href: "/dashboard/configuracoes/equipe", label: "Equipe" },
+  { href: "/dashboard/configuracoes/whatsapp", label: "WhatsApp" },
 ];
 
 export function SettingsNav() {

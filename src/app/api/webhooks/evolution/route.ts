@@ -4,6 +4,7 @@
 // ============================================
 
 import { NextResponse, type NextRequest } from "next/server";
+import { rateLimiters } from "@/lib/utils/rate-limit";
 import { verifyEvolutionWebhook } from "@/lib/evolution/webhook";
 import {
   extractPhoneFromJid,
@@ -41,6 +42,18 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
  */
 export async function POST(request: NextRequest) {
   try {
+    // 0. Rate limiting
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    const { allowed } = rateLimiters.webhook(ip);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded" },
+        { status: 429 }
+      );
+    }
+
     // 1. Parse body
     const rawBody = await request.text();
     let payload: unknown;

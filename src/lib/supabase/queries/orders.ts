@@ -140,28 +140,70 @@ export async function setOrderPaymentId(orderId: string, paymentId: string) {
 }
 
 /**
- * Decrement stock for products in an order.
- * Reads current stock, then decrements (never below 0).
+ * Atomically decrement stock for products in an order.
+ * Uses the `decrement_stock` SQL function to prevent race conditions.
+ * Returns list of products where stock was insufficient.
  */
 export async function decrementStock(
   items: { productId: string; quantity: number }[]
-) {
+): Promise<{ insufficientStock: string[] }> {
+  const supabase = createServiceRoleClient();
+  const insufficientStock: string[] = [];
+
+  for (const item of items) {
+    const { data, error } = await supabase.rpc("decrement_stock", {
+      p_product_id: item.productId,
+      p_quantity: item.quantity,
+    });
+
+    if (error) {
+      console.error(`decrement_stock RPC error for ${item.productId}:`, error);
+      insufficientStock.push(item.productId);
+      continue;
+    }
+
+    // data is boolean: true = success, false = insufficient stock
+    if (data === false) {
+      insufficientStock.push(item.productId);
+    }
+  }
+
+  return { insufficientStock };
+}
+
+/**
+ * Restore stock for products (e.g., when payment fails or order is cancelled).
+ * Uses the `restore_stock` SQL function.
+ */
+export async function restoreStock(
+  items: { productId: string; quantity: number }[]
+): Promise<void> {
   const supabase = createServiceRoleClient();
 
   for (const item of items) {
-    const { data: product } = await supabase
-      .from("products")
-      .select("stock_qty")
-      .eq("id", item.productId)
-      .single();
+    const { error } = await supabase.rpc("restore_stock", {
+      p_product_id: item.productId,
+      p_quantity: item.quantity,
+    });
 
-    if (product) {
-      await supabase
-        .from("products")
-        .update({
-          stock_qty: Math.max(0, product.stock_qty - item.quantity),
-        })
-        .eq("id", item.productId);
+    if (error) {
+      console.error(`restore_stock RPC error for ${item.productId}:`, error);
     }
   }
+}
+
+/**
+ * Get order by ID with items.
+ */
+export async function getOrderById(orderId: string) {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*, order_items(*)")
+    .eq("id", orderId)
+    .single();
+
+  if (error || !data) return null;
+  return data;
 }

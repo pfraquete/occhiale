@@ -1,7 +1,8 @@
 #!/bin/bash
 # ============================================
 # OCCHIALE VPS Setup Script
-# Installs Docker, configures .env, starts services
+# Installs Docker, configures .env, sets up firewall,
+# starts services with Caddy reverse proxy + auto SSL
 # Run: chmod +x setup.sh && ./setup.sh
 # ============================================
 
@@ -40,7 +41,25 @@ else
 fi
 
 # ------------------------------------------
-# 3. Create .env from .env.example
+# 3. Configure UFW Firewall
+# ------------------------------------------
+if command -v ufw &>/dev/null; then
+  log "Configuring UFW firewall..."
+  sudo ufw default deny incoming
+  sudo ufw default allow outgoing
+  sudo ufw allow 22/tcp comment 'SSH'
+  sudo ufw allow 80/tcp comment 'HTTP (Caddy)'
+  sudo ufw allow 443/tcp comment 'HTTPS (Caddy)'
+  sudo ufw allow 443/udp comment 'HTTP/3 QUIC (Caddy)'
+  sudo ufw --force enable
+  log "Firewall configured: SSH (22), HTTP (80), HTTPS (443) allowed"
+else
+  warn "UFW not found. Install with: sudo apt install ufw"
+  warn "Skipping firewall configuration"
+fi
+
+# ------------------------------------------
+# 4. Create .env from .env.example
 # ------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -53,73 +72,102 @@ if [ ! -f .env ]; then
   EVOLUTION_KEY=$(openssl rand -hex 32)
   POSTGRES_PW=$(openssl rand -base64 24 | tr -d '=+/')
   MEILI_KEY=$(openssl rand -hex 32)
+  REDIS_PW=$(openssl rand -hex 16)
 
   # Write generated values
   sed -i "s|^EVOLUTION_API_KEY=.*|EVOLUTION_API_KEY=${EVOLUTION_KEY}|" .env
   sed -i "s|^POSTGRES_EVOLUTION_PASSWORD=.*|POSTGRES_EVOLUTION_PASSWORD=${POSTGRES_PW}|" .env
   sed -i "s|^MEILISEARCH_MASTER_KEY=.*|MEILISEARCH_MASTER_KEY=${MEILI_KEY}|" .env
+  sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PW}|" .env
 
-  warn "Generated random keys for EVOLUTION_API_KEY, POSTGRES_EVOLUTION_PASSWORD, MEILISEARCH_MASTER_KEY"
-  warn "Edit .env to set EVOLUTION_SERVER_URL to your VPS public URL"
+  warn "Generated random keys for all services"
+  warn "IMPORTANT: Edit .env to set your domain names:"
+  warn "  EVOLUTION_DOMAIN=api.yourdomain.com"
+  warn "  MEILISEARCH_DOMAIN=search.yourdomain.com"
+  warn "  EVOLUTION_SERVER_URL=https://api.yourdomain.com"
   echo ""
-  echo "  Generated keys:"
+  echo "  Generated keys (save these for your Next.js .env.local):"
   echo "    EVOLUTION_API_KEY=${EVOLUTION_KEY}"
   echo "    MEILISEARCH_MASTER_KEY=${MEILI_KEY}"
-  echo ""
-  echo "  Save these keys! You'll need them in your Next.js .env.local"
   echo ""
 else
   log ".env already exists, skipping generation"
 fi
 
 # ------------------------------------------
-# 4. Start services
+# 5. Prompt for domain configuration
+# ------------------------------------------
+echo ""
+read -p "Enter your Evolution API domain (e.g., api.yourdomain.com): " EVOLUTION_DOMAIN
+read -p "Enter your Meilisearch domain (e.g., search.yourdomain.com): " MEILISEARCH_DOMAIN
+
+if [ -n "$EVOLUTION_DOMAIN" ]; then
+  sed -i "s|^EVOLUTION_DOMAIN=.*|EVOLUTION_DOMAIN=${EVOLUTION_DOMAIN}|" .env
+  sed -i "s|^EVOLUTION_SERVER_URL=.*|EVOLUTION_SERVER_URL=https://${EVOLUTION_DOMAIN}|" .env
+fi
+
+if [ -n "$MEILISEARCH_DOMAIN" ]; then
+  sed -i "s|^MEILISEARCH_DOMAIN=.*|MEILISEARCH_DOMAIN=${MEILISEARCH_DOMAIN}|" .env
+fi
+
+# ------------------------------------------
+# 6. Start services
 # ------------------------------------------
 log "Starting Docker services..."
 docker compose up -d
 
 # ------------------------------------------
-# 5. Health check
+# 7. Health check
 # ------------------------------------------
 log "Waiting for services to be healthy..."
-sleep 10
+sleep 15
 
 echo ""
 log "Service Status:"
 echo "-----------------------------------"
 
-# Check Evolution API
-if curl -sf http://localhost:8080/ &>/dev/null; then
-  echo -e "  Evolution API:  ${GREEN}✓ Running${NC} (port 8080)"
+# Check Caddy
+if docker ps --filter "name=occhiale-caddy" --filter "status=running" -q | grep -q .; then
+  echo -e "  Caddy (proxy):  ${GREEN}✓ Running${NC} (ports 80, 443)"
 else
-  echo -e "  Evolution API:  ${RED}✗ Not ready${NC} (may still be starting)"
+  echo -e "  Caddy (proxy):  ${RED}✗ Not ready${NC}"
+fi
+
+# Check Evolution API
+if docker exec occhiale-caddy wget -qO- http://evolution-api:8080/ &>/dev/null 2>&1; then
+  echo -e "  Evolution API:  ${GREEN}✓ Running${NC} (internal :8080)"
+else
+  echo -e "  Evolution API:  ${YELLOW}⏳ Starting${NC} (may take a moment)"
 fi
 
 # Check Redis
 if docker exec occhiale-redis redis-cli ping 2>/dev/null | grep -q PONG; then
-  echo -e "  Redis:          ${GREEN}✓ Running${NC} (port 6379)"
+  echo -e "  Redis:          ${GREEN}✓ Running${NC} (internal :6379)"
 else
   echo -e "  Redis:          ${RED}✗ Not ready${NC}"
 fi
 
 # Check PostgreSQL
 if docker exec occhiale-postgres-evolution pg_isready -U evolution -d evolution &>/dev/null; then
-  echo -e "  PostgreSQL:     ${GREEN}✓ Running${NC} (port 5433)"
+  echo -e "  PostgreSQL:     ${GREEN}✓ Running${NC} (internal :5432)"
 else
   echo -e "  PostgreSQL:     ${RED}✗ Not ready${NC}"
 fi
 
 # Check Meilisearch
-if curl -sf http://localhost:7700/health &>/dev/null; then
-  echo -e "  Meilisearch:    ${GREEN}✓ Running${NC} (port 7700)"
+if docker exec occhiale-caddy wget -qO- http://meilisearch:7700/health &>/dev/null 2>&1; then
+  echo -e "  Meilisearch:    ${GREEN}✓ Running${NC} (internal :7700)"
 else
-  echo -e "  Meilisearch:    ${RED}✗ Not ready${NC} (may still be starting)"
+  echo -e "  Meilisearch:    ${YELLOW}⏳ Starting${NC} (may take a moment)"
 fi
 
 echo "-----------------------------------"
 echo ""
 log "Setup complete! Next steps:"
-echo "  1. Set EVOLUTION_SERVER_URL in .env to your VPS public URL"
-echo "  2. Copy EVOLUTION_API_KEY and MEILISEARCH_MASTER_KEY to your Next.js .env.local"
-echo "  3. Configure DNS/reverse proxy (nginx/caddy) for HTTPS"
-echo "  4. Run: docker compose logs -f  (to monitor)"
+echo "  1. Ensure DNS A records point to this VPS IP for:"
+echo "     - ${EVOLUTION_DOMAIN:-api.yourdomain.com}"
+echo "     - ${MEILISEARCH_DOMAIN:-search.yourdomain.com}"
+echo "  2. Caddy will automatically obtain SSL certificates"
+echo "  3. Copy EVOLUTION_API_KEY and MEILISEARCH_MASTER_KEY to your Next.js .env.local"
+echo "  4. Deploy Next.js to Vercel and configure environment variables"
+echo "  5. Monitor: docker compose logs -f"

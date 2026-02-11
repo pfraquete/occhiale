@@ -1,9 +1,33 @@
 # ============================================
-# OCCHIALE - VPS Docker Compose
-# Services: Evolution API v2, Redis, PostgreSQL (Evolution), Meilisearch
+# OCCHIALE - VPS Docker Compose (Production)
+# Services: Caddy (reverse proxy + SSL), Evolution API v2,
+#           Redis, PostgreSQL (Evolution), Meilisearch
 # ============================================
 
 services:
+  # ------------------------------------------
+  # Caddy — Reverse Proxy + Auto SSL (Let's Encrypt)
+  # ------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    container_name: occhiale-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      evolution-api:
+        condition: service_started
+      meilisearch:
+        condition: service_healthy
+    networks:
+      - occhiale-net
+
   # ------------------------------------------
   # Evolution API v2 — WhatsApp via Baileys
   # ------------------------------------------
@@ -11,11 +35,12 @@ services:
     image: atendai/evolution-api:v2.2.3
     container_name: occhiale-evolution
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    # No ports exposed — accessed only via Caddy
+    expose:
+      - "8080"
     environment:
       # Server
-      SERVER_URL: ${EVOLUTION_SERVER_URL:-http://localhost:8080}
+      SERVER_URL: ${EVOLUTION_SERVER_URL:-https://api.yourdomain.com}
       SERVER_PORT: 8080
 
       # Authentication
@@ -82,15 +107,16 @@ services:
       - occhiale-net
 
   # ------------------------------------------
-  # Redis — Cache & session store
+  # Redis — Cache & session store (internal only)
   # ------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: occhiale-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    # No ports exposed — internal only
+    expose:
+      - "6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:-}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -102,14 +128,15 @@ services:
       - occhiale-net
 
   # ------------------------------------------
-  # PostgreSQL — Evolution API database (separate from Supabase)
+  # PostgreSQL — Evolution API database (internal only)
   # ------------------------------------------
   postgres-evolution:
     image: postgres:16-alpine
     container_name: occhiale-postgres-evolution
     restart: unless-stopped
-    ports:
-      - "5433:5432"
+    # No ports exposed — internal only
+    expose:
+      - "5432"
     environment:
       POSTGRES_DB: evolution
       POSTGRES_USER: evolution
@@ -131,8 +158,9 @@ services:
     image: getmeili/meilisearch:v1.11
     container_name: occhiale-meilisearch
     restart: unless-stopped
-    ports:
-      - "7700:7700"
+    # No ports exposed — accessed only via Caddy
+    expose:
+      - "7700"
     environment:
       MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY}
       MEILI_ENV: production
@@ -149,6 +177,8 @@ services:
       - occhiale-net
 
 volumes:
+  caddy_data:
+  caddy_config:
   evolution_instances:
   redis_data:
   postgres_evolution_data:

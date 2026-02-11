@@ -1,0 +1,53 @@
+# ============================================
+# OCCHIALE - Caddy Reverse Proxy Configuration
+# Replace {$DOMAIN} placeholders with your actual domain
+# or set DOMAIN env var in .env
+# ============================================
+
+# Evolution API — WhatsApp
+{$EVOLUTION_DOMAIN:api.yourdomain.com} {
+	reverse_proxy evolution-api:8080
+
+	# Security headers
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	# Rate limiting for webhook endpoints
+	@webhooks path /webhook/*
+	rate_limit @webhooks {
+		zone webhooks {
+			key {remote_host}
+			events 100
+			window 1m
+		}
+	}
+
+	log {
+		output file /data/logs/evolution.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
+}
+
+# Meilisearch — Search Engine
+{$MEILISEARCH_DOMAIN:search.yourdomain.com} {
+	reverse_proxy meilisearch:7700
+
+	# Security headers
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	log {
+		output file /data/logs/meilisearch.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
+}
