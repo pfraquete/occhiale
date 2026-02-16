@@ -6,8 +6,10 @@ import { POSCart } from "./pos-cart";
 import { CustomerSelector } from "./customer-selector";
 import { createPOSOrderAction } from "@/lib/actions/pos";
 import { formatCentsToBRL } from "@/lib/utils/format";
-import { ShoppingBag, CreditCard, Banknote, QrCode, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { ShoppingBag, CreditCard, Banknote, QrCode, Loader2, CheckCircle, AlertCircle, Printer, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ThermalReceipt } from "./thermal-receipt";
+import { Dialog } from "@/components/ui/dialog";
 
 interface POSContainerProps {
     storeId: string;
@@ -22,6 +24,8 @@ export function POSContainer({ storeId, initialProducts, initialCustomers }: POS
     const [isPending, setIsPending] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<string>("credit_card");
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [lastOrder, setLastOrder] = useState<{ id: string, number: string, items: any[] } | null>(null);
+    const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
     const addToCart = (product: any) => {
         setCart((prev) => {
@@ -86,13 +90,25 @@ export function POSContainer({ storeId, initialProducts, initialCustomers }: POS
 
         if (result.success) {
             setNotification({ type: 'success', message: `Venda #${result.orderNumber} finalizada com sucesso!` });
+            setLastOrder({
+                id: result.orderId as string,
+                number: result.orderNumber as string,
+                items: [...cart]
+            });
             setCart([]);
             setSelectedCustomer(null);
             setTimeout(() => setNotification(null), 5000);
             router.refresh();
         } else {
-            setNotification({ type: 'error', message: result.error || "Erro ao processar venda" });
+            setNotification({ type: 'error', message: (result.error as string) || "Erro ao processar venda" });
         }
+    };
+
+    const handlePrint = () => {
+        setIsReceiptOpen(true);
+        setTimeout(() => {
+            window.print();
+        }, 500);
     };
 
     return (
@@ -166,6 +182,16 @@ export function POSContainer({ storeId, initialProducts, initialCustomers }: POS
                             </span>
                         </div>
 
+                        {lastOrder && (
+                            <button
+                                onClick={handlePrint}
+                                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-brand-500 py-3 text-sm font-bold text-brand-600 transition-all hover:bg-brand-50"
+                            >
+                                <Printer className="h-4 w-4" />
+                                Imprimir Cupom #{lastOrder.number}
+                            </button>
+                        )}
+
                         <button
                             onClick={handleCheckout}
                             disabled={isPending || cart.length === 0 || !selectedCustomer}
@@ -183,6 +209,35 @@ export function POSContainer({ storeId, initialProducts, initialCustomers }: POS
                     </div>
                 </div>
             </div>
+
+            <Dialog open={isReceiptOpen} onClose={() => setIsReceiptOpen(false)} className="max-w-[100mm] p-0 border-none bg-transparent shadow-none">
+                <div id="thermal-receipt-container" className="bg-white p-4 shadow-xl rounded-lg relative">
+                    <button
+                        onClick={() => setIsReceiptOpen(false)}
+                        className="absolute right-2 top-2 print:hidden p-1 rounded-full hover:bg-gray-100"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                    {lastOrder && (
+                        <ThermalReceipt
+                            orderNumber={lastOrder.number}
+                            items={lastOrder.items}
+                            total={lastOrder.items.reduce((acc, i) => acc + i.unitPrice * i.quantity, 0)}
+                            paymentMethod={paymentMethod}
+                            customerName={selectedCustomer?.name}
+                        />
+                    )}
+                    <div className="mt-4 flex justify-center print:hidden">
+                        <button
+                            onClick={() => window.print()}
+                            className="flex items-center gap-2 rounded-lg bg-text-primary px-4 py-2 text-white text-sm font-bold"
+                        >
+                            <Printer className="h-4 w-4" />
+                            Re-imprimir
+                        </button>
+                    </div>
+                </div>
+            </Dialog>
         </div>
     );
 }
