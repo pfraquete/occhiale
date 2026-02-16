@@ -5,9 +5,11 @@ import { productSchema } from "@/lib/validations/product";
 import {
   createProduct,
   updateProduct,
+  getProductById,
   deleteProduct,
   toggleProductActive,
 } from "@/lib/supabase/queries/dashboard-products";
+import { addInventoryMovement } from "@/lib/supabase/queries/inventory";
 import type { Json } from "@/lib/types/database";
 
 export interface ActionResult {
@@ -47,6 +49,18 @@ export async function createProductAction(
     });
 
     revalidatePath("/dashboard/produtos");
+
+    // Record initial stock movement if quantity > 0
+    if (parsed.data.stockQty > 0) {
+      await addInventoryMovement({
+        store_id: storeId,
+        product_id: result.id,
+        type: "entry",
+        quantity: parsed.data.stockQty,
+        reason: "Initial stock entry during product creation",
+      });
+    }
+
     return { success: true, productId: result.id };
   } catch (err) {
     return {
@@ -86,8 +100,20 @@ export async function updateProductAction(
     if (parsed.data.images !== undefined)
       updateData.images = parsed.data.images;
     if (parsed.data.specs !== undefined) updateData.specs = parsed.data.specs;
-    if (parsed.data.stockQty !== undefined)
-      updateData.stock_qty = parsed.data.stockQty;
+    // If stock_qty was updated, record a movement
+    if (parsed.data.stockQty !== undefined) {
+      const oldProduct = await getProductById(productId);
+      if (oldProduct && oldProduct.stock_qty !== parsed.data.stockQty) {
+        const diff = parsed.data.stockQty - oldProduct.stock_qty;
+        await addInventoryMovement({
+          store_id: oldProduct.store_id,
+          product_id: productId,
+          type: "adjustment",
+          quantity: diff,
+          reason: "Manual stock adjustment via product edit",
+        });
+      }
+    }
     if (parsed.data.isActive !== undefined)
       updateData.is_active = parsed.data.isActive;
 

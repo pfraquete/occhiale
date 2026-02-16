@@ -168,6 +168,157 @@ export type Database = {
           },
         ]
       }
+      inventory_batches: {
+        Row: {
+          batch_number: string
+          created_at: string
+          current_qty: number
+          entry_cost: number
+          entry_date: string
+          expiry_date: string | null
+          id: string
+          initial_qty: number
+          product_id: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          batch_number: string
+          created_at?: string
+          current_qty: number
+          entry_cost?: number
+          entry_date?: string
+          expiry_date?: string | null
+          id?: string
+          initial_qty: number
+          product_id: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          batch_number?: string
+          created_at?: string
+          current_qty?: number
+          entry_cost?: number
+          entry_date?: string
+          expiry_date?: string | null
+          id?: string
+          initial_qty?: number
+          product_id?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_batches_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_movements: {
+        Row: {
+          batch_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          product_id: string
+          quantity: number
+          reason: string | null
+          reference_id: string | null
+          store_id: string
+          type: Database["public"]["Enums"]["inventory_movement_type"]
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id: string
+          quantity: number
+          reason?: string | null
+          reference_id?: string | null
+          store_id: string
+          type: Database["public"]["Enums"]["inventory_movement_type"]
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id?: string
+          quantity?: number
+          reason?: string | null
+          reference_id?: string | null
+          store_id?: string
+          type?: Database["public"]["Enums"]["inventory_movement_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          id: string
+          endpoint: string
+          keys: Json
+          store_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          endpoint: string
+          keys: Json
+          store_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          endpoint?: string
+          keys?: Json
+          store_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
@@ -363,6 +514,10 @@ export type Database = {
           stock_qty: number
           store_id: string
           updated_at: string
+          ai_specs: Json | null
+          ai_description: string | null
+          ai_tags: string[] | null
+          ai_analyzed_at: string | null
         }
         Insert: {
           brand?: string | null
@@ -381,6 +536,10 @@ export type Database = {
           stock_qty?: number
           store_id: string
           updated_at?: string
+          ai_specs?: Json | null
+          ai_description?: string | null
+          ai_tags?: string[] | null
+          ai_analyzed_at?: string | null
         }
         Update: {
           brand?: string | null
@@ -399,6 +558,10 @@ export type Database = {
           stock_qty?: number
           store_id?: string
           updated_at?: string
+          ai_specs?: Json | null
+          ai_description?: string | null
+          ai_tags?: string[] | null
+          ai_analyzed_at?: string | null
         }
         Relationships: [
           {
@@ -720,9 +883,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      inventory_abc_analysis: {
+        Row: {
+          abc_class: string | null
+          brand: string | null
+          category: string | null
+          cumulative_percentage: number | null
+          cumulative_revenue: number | null
+          name: string | null
+          product_id: string | null
+          store_id: string | null
+          total_revenue: number | null
+          total_store_revenue: number | null
+          total_units_sold: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_batches_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      increment_batch_qty: {
+        Args: {
+          p_batch_id: string
+          p_increment: number
+        }
+        Returns: undefined
+      }
+      process_inventory_sale: {
+        Args: {
+          p_store_id: string
+          p_product_id: string
+          p_quantity: number
+          p_reference_id: string
+          p_user_id: string
+          p_reason?: string
+        }
+        Returns: boolean
+      }
       user_is_owner_or_admin: { Args: { p_store_id: string }; Returns: boolean }
       user_store_ids: {
         Args: never
@@ -733,7 +944,13 @@ export type Database = {
       user_store_role: { Args: { p_store_id: string }; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      inventory_movement_type:
+      | "entry"
+      | "sale"
+      | "return"
+      | "adjustment"
+      | "transfer"
+      | "loss"
     }
     CompositeTypes: {
       [_ in never]: never

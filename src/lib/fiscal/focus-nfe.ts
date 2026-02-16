@@ -1,4 +1,4 @@
-"use server";
+
 
 import { Json } from "@/lib/types/database";
 

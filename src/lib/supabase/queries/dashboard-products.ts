@@ -25,7 +25,7 @@ export async function getProducts(
   let query = supabase
     .from("products")
     .select(
-      "id, name, brand, category, price, compare_price, stock_qty, is_active, images, created_at",
+      "id, name, brand, category, price, compare_price, stock_qty, is_active, images, created_at, sku",
       { count: "exact" }
     )
     .eq("store_id", storeId)

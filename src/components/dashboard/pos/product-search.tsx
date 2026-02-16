@@ -42,8 +42,11 @@ export function ProductSearch({ onSelect, products }: ProductSearchProps) {
     // Handle barcode scanner (usually they just type fast and hit Enter)
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && results.length === 1) {
-            onSelect(results[0]);
-            setQuery("");
+            const product = results[0];
+            if (product) {
+                onSelect(product);
+                setQuery("");
+            }
         }
     };
 

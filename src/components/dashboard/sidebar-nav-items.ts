@@ -50,6 +50,11 @@ export const sidebarNavItems: NavItem[] = [
     icon: Users,
   },
   {
+    label: "Inventário",
+    href: "/dashboard/inventario",
+    icon: Package,
+  },
+  {
     label: "WhatsApp",
     href: "/dashboard/whatsapp",
     icon: MessageSquare,
