@@ -5,7 +5,12 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyPagarmeSignature } from "@/lib/pagarme/webhook";
-import { updateOrderPayment } from "@/lib/supabase/queries/orders";
+import {
+  updateOrderPayment,
+  getOrderByPaymentId,
+  restoreStock
+} from "@/lib/supabase/queries/orders";
+import { sendOrderPaidNotification, sendPaymentFailedNotification } from "@/lib/evolution/notifications";
 import type { PagarmeWebhookEvent } from "@/lib/pagarme/types";
 
 /**
@@ -13,11 +18,11 @@ import type { PagarmeWebhookEvent } from "@/lib/pagarme/types";
  * We verify the signature and update order status accordingly.
  *
  * Events handled:
- * - order.paid → payment_status='paid', status='confirmed'
- * - charge.paid → payment_status='paid', status='confirmed'
- * - order.payment_failed → payment_status='failed'
- * - charge.payment_failed → payment_status='failed'
- * - order.canceled → payment_status='canceled', status='canceled'
+ * - order.paid → payment_status='paid', status='confirmed' + notification
+ * - charge.paid → payment_status='paid', status='confirmed' + notification
+ * - order.payment_failed → payment_status='failed' + stock restoration
+ * - charge.payment_failed → payment_status='failed' + stock restoration
+ * - order.canceled → payment_status='canceled', status='canceled' + stock restoration
  * - charge.refunded → payment_status='refunded', status='refunded'
  * - charge.chargedback → payment_status='chargedback'
  */
@@ -61,7 +66,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    // 6. Handle events
+    // 6. Find the order in our database
+    const order = await getOrderByPaymentId(pagarmeId);
+    if (!order) {
+      console.warn(`Order not found for Pagar.me ID: ${pagarmeId}`);
+      // Return 200 anyway to stop retries for non-existent orders
+      return NextResponse.json({ received: true }, { status: 200 });
+    }
+
+    // 7. Handle events
     switch (event.type) {
       case "order.paid":
       case "charge.paid":
@@ -69,7 +82,19 @@ export async function POST(request: NextRequest) {
           paymentStatus: "paid",
           status: "confirmed",
         });
-        console.log(`Order ${pagarmeId} marked as paid`);
+
+        // Trigger notification
+        if (order.customers && order.stores) {
+          await sendOrderPaidNotification({
+            whatsappNumber: order.stores.whatsapp_number ?? "",
+            customerPhone: order.customers.phone ?? "",
+            customerName: order.customers.name,
+            orderNumber: order.order_number,
+            storeName: order.stores.name,
+          });
+        }
+
+        console.log(`Order ${pagarmeId} marked as paid and notified`);
         break;
 
       case "order.payment_failed":
@@ -77,7 +102,28 @@ export async function POST(request: NextRequest) {
         await updateOrderPayment(pagarmeId, {
           paymentStatus: "failed",
         });
-        console.log(`Order ${pagarmeId} payment failed`);
+
+        // Restore stock
+        if (order.order_items && order.order_items.length > 0) {
+          await restoreStock(
+            order.order_items.map((item: any) => ({
+              productId: item.product_id,
+              quantity: item.quantity,
+            }))
+          );
+        }
+
+        // Notify customer
+        if (order.customers && order.stores) {
+          await sendPaymentFailedNotification({
+            whatsappNumber: order.stores.whatsapp_number ?? "",
+            customerPhone: order.customers.phone ?? "",
+            customerName: order.customers.name,
+            orderNumber: order.order_number,
+          });
+        }
+
+        console.log(`Order ${pagarmeId} payment failed - stock restored`);
         break;
 
       case "order.canceled":
@@ -85,7 +131,17 @@ export async function POST(request: NextRequest) {
           paymentStatus: "canceled",
           status: "canceled",
         });
-        console.log(`Order ${pagarmeId} canceled`);
+
+        // Restore stock
+        if (order.order_items && order.order_items.length > 0) {
+          await restoreStock(
+            order.order_items.map((item: any) => ({
+              productId: item.product_id,
+              quantity: item.quantity,
+            }))
+          );
+        }
+        console.log(`Order ${pagarmeId} canceled - stock restored`);
         break;
 
       case "charge.refunded":

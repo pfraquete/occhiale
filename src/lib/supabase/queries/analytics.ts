@@ -313,6 +313,54 @@ export async function getConversionMetrics(storeId: string) {
   };
 }
 
+/**
+ * Get Lifetime Value (CLV) and total revenue.
+ */
+export async function getLifetimeValue(storeId: string) {
+  const supabase = await createClient();
+
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("total, customer_id")
+    .eq("store_id", storeId)
+    .eq("payment_status", "paid");
+
+  if (!orders || orders.length === 0) {
+    return { ltv: 0, totalRevenue: 0, purchasingCustomers: 0 };
+  }
+
+  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+  const uniqueCustomers = new Set(orders.map((o) => o.customer_id)).size;
+  const ltv = uniqueCustomers > 0 ? Math.round(totalRevenue / uniqueCustomers) : 0;
+
+  return { ltv, totalRevenue, purchasingCustomers: uniqueCustomers };
+}
+
+/**
+ * Get the Repeat Purchase Rate.
+ */
+export async function getRepeatPurchaseRate(storeId: string) {
+  const supabase = await createClient();
+
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("customer_id")
+    .eq("store_id", storeId)
+    .eq("payment_status", "paid");
+
+  if (!orders || orders.length === 0) return 0;
+
+  const orderCounts = new Map<string, number>();
+  for (const o of orders) {
+    orderCounts.set(o.customer_id, (orderCounts.get(o.customer_id) ?? 0) + 1);
+  }
+
+  const totalCustomers = orderCounts.size;
+  const repeatCustomers = Array.from(orderCounts.values()).filter(count => count > 1).length;
+
+  return totalCustomers > 0 ? Math.round((repeatCustomers / totalCustomers) * 100) : 0;
+}
+
 // ------------------------------------------
 // Helpers
 // ------------------------------------------

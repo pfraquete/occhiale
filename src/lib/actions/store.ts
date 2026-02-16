@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createStoreSchema } from "@/lib/validations/store";
+import { setupNewStore } from "@/lib/store/provisioning";
 
 export interface ActionResult {
   success: boolean;
@@ -90,6 +91,13 @@ export async function createStoreAction(
       error: "Erro ao criar loja. Tente novamente.",
     };
   }
+
+  // 5. Automated Provisioning (provisioning logic handles internal errors)
+  // Run asynchronously so we don't block the user redirect
+  setupNewStore({
+    storeId: store.id,
+    whatsappNumber: parsed.data.whatsappNumber,
+  });
 
   return { success: true, storeId: store.id };
 }

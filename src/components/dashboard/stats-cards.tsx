@@ -1,4 +1,4 @@
-import { DollarSign, ShoppingBag, TrendingUp, Package } from "lucide-react";
+import { DollarSign, ShoppingBag, TrendingUp, Package, Users, RefreshCw } from "lucide-react";
 import { StatsCard } from "./stats-card";
 import { formatCentsToBRL } from "@/lib/utils/format";
 import type { DashboardStats } from "@/lib/supabase/queries/dashboard";
@@ -9,7 +9,7 @@ interface StatsCardsProps {
 
 export function StatsCards({ stats }: StatsCardsProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <StatsCard
         title="Vendas (30d)"
         value={formatCentsToBRL(stats.totalSales)}
@@ -26,7 +26,19 @@ export function StatsCards({ stats }: StatsCardsProps) {
         title="Ticket Médio"
         value={formatCentsToBRL(stats.avgTicket)}
         icon={TrendingUp}
-        description="Valor médio por pedido"
+        description="Valor médio/pedido"
+      />
+      <StatsCard
+        title="LTV (Geral)"
+        value={formatCentsToBRL(stats.clv)}
+        icon={Users}
+        description="Valor/cliente vitalício"
+      />
+      <StatsCard
+        title="Taxa Recompra"
+        value={`${stats.repeatPurchaseRate}%`}
+        icon={RefreshCw}
+        description="Clientes que voltaram"
       />
       <StatsCard
         title="Produtos Ativos"

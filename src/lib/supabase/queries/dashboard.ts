@@ -5,6 +5,9 @@ export interface DashboardStats {
   totalOrders: number;
   avgTicket: number; // cents
   activeProducts: number;
+  clv: number; // cents
+  totalRevenueAllTime: number; // cents
+  repeatPurchaseRate: number; // percentage
 }
 
 /**
@@ -19,7 +22,7 @@ export async function getDashboardStats(
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Orders stats (last 30 days, paid only)
+  // 1. Core KPIs (last 30 days)
   const { data: ordersData } = await supabase
     .from("orders")
     .select("total")
@@ -31,18 +34,29 @@ export async function getDashboardStats(
   const totalOrders = ordersData?.length ?? 0;
   const avgTicket = totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
 
-  // Active products count
+  // 2. Active products count
   const { count: activeProducts } = await supabase
     .from("products")
     .select("id", { count: "exact", head: true })
     .eq("store_id", storeId)
     .eq("is_active", true);
 
+  // 3. Advanced Metrics (importing from analytics queries)
+  const { getLifetimeValue, getRepeatPurchaseRate } = await import("./analytics");
+
+  const [ltvData, repeatRate] = await Promise.all([
+    getLifetimeValue(storeId),
+    getRepeatPurchaseRate(storeId),
+  ]);
+
   return {
     totalSales,
     totalOrders,
     avgTicket,
     activeProducts: activeProducts ?? 0,
+    clv: ltvData.ltv,
+    totalRevenueAllTime: ltvData.totalRevenue,
+    repeatPurchaseRate: repeatRate,
   };
 }
 

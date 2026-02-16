@@ -124,6 +124,22 @@ export async function updateOrderPayment(
 }
 
 /**
+ * Get order by Pagar.me payment_id.
+ */
+export async function getOrderByPaymentId(paymentId: string) {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*, order_items(*), customers(*), stores(*)")
+    .eq("payment_id", paymentId)
+    .single();
+
+  if (error || !data) return null;
+  return data;
+}
+
+/**
  * Set payment_id on order after Pagar.me charge creation.
  */
 export async function setOrderPaymentId(orderId: string, paymentId: string) {
