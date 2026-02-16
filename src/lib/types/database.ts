@@ -187,6 +187,14 @@ export type Database = {
           subtotal: number
           total: number
           updated_at: string
+          source: string
+          seller_id: string | null
+          fiscal_status: string
+          fiscal_key: string | null
+          fiscal_number: number | null
+          fiscal_serie: number | null
+          fiscal_xml_url: string | null
+          fiscal_pdf_url: string | null
         }
         Insert: {
           created_at?: string
@@ -206,6 +214,14 @@ export type Database = {
           subtotal: number
           total: number
           updated_at?: string
+          source?: string
+          seller_id?: string | null
+          fiscal_status?: string
+          fiscal_key?: string | null
+          fiscal_number?: number | null
+          fiscal_serie?: number | null
+          fiscal_xml_url?: string | null
+          fiscal_pdf_url?: string | null
         }
         Update: {
           created_at?: string
@@ -225,6 +241,14 @@ export type Database = {
           subtotal?: number
           total?: number
           updated_at?: string
+          source?: string
+          seller_id?: string | null
+          fiscal_status?: string
+          fiscal_key?: string | null
+          fiscal_number?: number | null
+          fiscal_serie?: number | null
+          fiscal_xml_url?: string | null
+          fiscal_pdf_url?: string | null
         }
         Relationships: [
           {
@@ -558,6 +582,10 @@ export type Database = {
           slug: string
           updated_at: string
           whatsapp_number: string | null
+          cnpj: string | null
+          ie: string | null
+          tax_regime: string | null
+          fiscal_settings: Json
         }
         Insert: {
           created_at?: string
@@ -571,6 +599,10 @@ export type Database = {
           slug: string
           updated_at?: string
           whatsapp_number?: string | null
+          cnpj?: string | null
+          ie?: string | null
+          tax_regime?: string | null
+          fiscal_settings?: Json
         }
         Update: {
           created_at?: string
@@ -584,6 +616,10 @@ export type Database = {
           slug?: string
           updated_at?: string
           whatsapp_number?: string | null
+          cnpj?: string | null
+          ie?: string | null
+          tax_regime?: string | null
+          fiscal_settings?: Json
         }
         Relationships: []
       }

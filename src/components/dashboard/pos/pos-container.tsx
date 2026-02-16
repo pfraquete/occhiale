@@ -6,7 +6,7 @@ import { POSCart } from "./pos-cart";
 import { CustomerSelector } from "./customer-selector";
 import { createPOSOrderAction } from "@/lib/actions/pos";
 import { formatCentsToBRL } from "@/lib/utils/format";
-import { ShoppingBag, CreditCard, Banknote, QrCode, Loader2, CheckCircle, AlertCircle, Printer, X } from "lucide-react";
+import { ShoppingBag, CreditCard, Banknote, QrCode, Loader2, CheckCircle, AlertCircle, Printer, X, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ThermalReceipt } from "./thermal-receipt";
 import { Dialog } from "@/components/ui/dialog";
@@ -26,6 +26,7 @@ export function POSContainer({ storeId, initialProducts, initialCustomers }: POS
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [lastOrder, setLastOrder] = useState<{ id: string, number: string, items: any[] } | null>(null);
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+    const [emitFiscal, setEmitFiscal] = useState(false);
 
     const addToCart = (product: any) => {
         setCart((prev) => {
@@ -156,8 +157,8 @@ export function POSContainer({ storeId, initialProducts, initialCustomers }: POS
                                 key={method.id}
                                 onClick={() => setPaymentMethod(method.id)}
                                 className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 py-4 transition-all ${paymentMethod === method.id
-                                        ? "border-brand-500 bg-brand-50/50 text-brand-600 ring-1 ring-brand-500"
-                                        : "border-border bg-bg-secondary text-text-tertiary hover:border-brand-200"
+                                    ? "border-brand-500 bg-brand-50/50 text-brand-600 ring-1 ring-brand-500"
+                                    : "border-border bg-bg-secondary text-text-tertiary hover:border-brand-200"
                                     }`}
                             >
                                 <method.icon className="h-5 w-5" />
@@ -191,6 +192,20 @@ export function POSContainer({ storeId, initialProducts, initialCustomers }: POS
                                 Imprimir Cupom #{lastOrder.number}
                             </button>
                         )}
+
+                        <div className="flex items-center gap-3 rounded-xl border border-border p-4 bg-bg-secondary">
+                            <input
+                                type="checkbox"
+                                id="emit-fiscal"
+                                checked={emitFiscal}
+                                onChange={(e) => setEmitFiscal(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
+                            />
+                            <label htmlFor="emit-fiscal" className="text-sm font-medium text-text-secondary cursor-pointer flex-1">
+                                Emitir NFC-e (Nota Fiscal)
+                            </label>
+                            <FileText className={`h-4 w-4 ${emitFiscal ? 'text-brand-500' : 'text-text-tertiary'}`} />
+                        </div>
 
                         <button
                             onClick={handleCheckout}

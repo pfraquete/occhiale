@@ -12,6 +12,7 @@ import { OrderTimeline } from "@/components/dashboard/order-timeline";
 import { OrderItemsList } from "@/components/dashboard/order-items-list";
 import { OrderCustomerInfo } from "@/components/dashboard/order-customer-info";
 import { UpdateOrderStatusForm } from "@/components/dashboard/update-order-status-form";
+import { FiscalDetails } from "@/components/dashboard/orders/fiscal-details";
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
@@ -108,6 +109,16 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
         {/* Sidebar (1 col) */}
         <div className="space-y-6">
+          {/* Fiscal Info */}
+          <FiscalDetails
+            orderId={order.id}
+            fiscalStatus={order.fiscal_status || "none"}
+            fiscalKey={order.fiscal_key || undefined}
+            fiscalNumber={order.fiscal_number || undefined}
+            fiscalPdfUrl={order.fiscal_pdf_url || undefined}
+            fiscalXmlUrl={order.fiscal_xml_url || undefined}
+          />
+
           {/* Customer info */}
           <OrderCustomerInfo customer={order.customers} />
 

@@ -9,6 +9,7 @@ import {
 import { generateOrderNumber } from "@/lib/utils/format";
 import { revalidatePath } from "next/cache";
 import { ensureServiceOrder } from "@/lib/orders/service-order-utils";
+import { createFocusNFeClient, mapOrderToFocusNFe } from "@/lib/fiscal/focus-nfe";
 
 export async function createPOSOrderAction(params: {
     storeId: string;
@@ -27,6 +28,7 @@ export async function createPOSOrderAction(params: {
     }[];
     paymentMethod: string;
     total: number;
+    emitFiscal?: boolean;
 }) {
     const supabase = createServiceRoleClient();
 
@@ -72,22 +74,67 @@ export async function createPOSOrderAction(params: {
             total: params.total,
             paymentMethod: params.paymentMethod,
             shippingAddress: null,
-            items: params.items
+            items: params.items,
+            source: "pos"
         });
 
         // 4. Update order as POS, Confirmed and Paid
-        const { error: updateError } = await supabase
+        // Use a safe update (try source first, if it fails, fallback)
+        const { data: updatedOrder, error: updateError } = await supabase
             .from("orders")
             .update({
                 status: "confirmed",
                 payment_status: "paid",
                 source: "pos"
             })
-            .eq("id", orderId);
+            .eq("id", orderId)
+            .select("*, store:stores(*), customer:customers(*)")
+            .single();
 
         if (updateError) throw updateError;
 
-        // 5. Trigger OS if needed
+        // 5. Emit NFC-e if requested
+        const fiscalSettings = updatedOrder.store?.fiscal_settings as Record<string, any>;
+        if (params.emitFiscal && fiscalSettings?.token) {
+            try {
+                const focusClient = await createFocusNFeClient({
+                    token: fiscalSettings.token
+                });
+
+                // Fetch full items
+                const { data: orderItems } = await supabase
+                    .from("order_items")
+                    .select("*")
+                    .eq("order_id", updatedOrder.id);
+
+                const nfcData = mapOrderToFocusNFe(
+                    updatedOrder,
+                    updatedOrder.store,
+                    orderItems || [],
+                    updatedOrder.customer
+                );
+
+                const response = await focusClient.emitNFCe(nfcData);
+
+                // Update real fiscal columns
+                await supabase
+                    .from("orders")
+                    .update({
+                        fiscal_status: "pending",
+                        fiscal_key: response.ref // Initial reference
+                    })
+                    .eq("id", updatedOrder.id);
+
+            } catch (e: any) {
+                console.error("Fiscal error:", e);
+                await supabase
+                    .from("orders")
+                    .update({ notes: `${updatedOrder.notes} | Fiscal Error: ${e.message}` })
+                    .eq("id", updatedOrder.id);
+            }
+        }
+
+        // 6. Trigger OS if needed
         await ensureServiceOrder(orderId);
 
         revalidatePath("/dashboard/pedidos");

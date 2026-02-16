@@ -11,6 +11,8 @@ export interface CreateOrderParams {
   total: number;
   paymentMethod: string;
   shippingAddress: Json | null;
+  source?: string;
+  sellerId?: string | null;
   items: {
     productId: string;
     quantity: number;
@@ -45,6 +47,8 @@ export async function createOrder(
     shipping_address: params.shippingAddress,
     status: "pending",
     payment_status: "pending",
+    source: params.source ?? "online",
+    seller_id: params.sellerId ?? null,
   };
 
   const { data: order, error: orderError } = await supabase
@@ -90,7 +94,7 @@ export async function getOrderByNumber(orderNumber: string) {
 
   const { data, error } = await supabase
     .from("orders")
-    .select("*, order_items(*)")
+    .select("*, order_items(*), fiscal_status, fiscal_key, fiscal_number, fiscal_serie, fiscal_xml_url, fiscal_pdf_url")
     .eq("order_number", orderNumber)
     .single();
 
@@ -216,7 +220,7 @@ export async function getOrderById(orderId: string) {
 
   const { data, error } = await supabase
     .from("orders")
-    .select("*, order_items(*)")
+    .select("*, order_items(*), fiscal_status, fiscal_key, fiscal_number, fiscal_serie, fiscal_xml_url, fiscal_pdf_url")
     .eq("id", orderId)
     .single();
 
