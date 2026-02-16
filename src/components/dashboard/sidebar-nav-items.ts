@@ -8,6 +8,7 @@ import {
   BarChart3,
   Zap,
   FileText,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,6 +28,16 @@ export const sidebarNavItems: NavItem[] = [
     label: "Pedidos",
     href: "/dashboard/pedidos",
     icon: ShoppingBag,
+  },
+  {
+    label: "PDV (Balcão)",
+    href: "/dashboard/pos",
+    icon: ShoppingBag,
+  },
+  {
+    label: "Ordem de Serviço",
+    href: "/dashboard/ordens-servico",
+    icon: ClipboardList,
   },
   {
     label: "Produtos",

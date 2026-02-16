@@ -11,6 +11,7 @@ import {
   restoreStock
 } from "@/lib/supabase/queries/orders";
 import { sendOrderPaidNotification, sendPaymentFailedNotification } from "@/lib/evolution/notifications";
+import { ensureServiceOrder } from "@/lib/orders/service-order-utils";
 import type { PagarmeWebhookEvent } from "@/lib/pagarme/types";
 
 /**
@@ -82,6 +83,9 @@ export async function POST(request: NextRequest) {
           paymentStatus: "paid",
           status: "confirmed",
         });
+
+        // Ensure OS is created if needed
+        await ensureServiceOrder(order.id);
 
         // Trigger notification
         if (order.customers && order.stores) {

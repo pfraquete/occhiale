@@ -45,3 +45,38 @@ export async function sendPaymentFailedNotification(params: {
         console.error(`Failed to send payment failed notification to ${to}:`, error);
     }
 }
+
+/**
+ * Sends a notification when a Service Order status changes.
+ */
+export async function sendOSStatusNotification(params: {
+    whatsappNumber: string;
+    customerPhone: string;
+    customerName: string;
+    orderNumber: string;
+    storeName: string;
+    status: string;
+}) {
+    const client = getEvolutionClient();
+    const to = params.customerPhone.replace(/\D/g, "");
+
+    let text = "";
+
+    switch (params.status) {
+        case "ready_for_pickup":
+            text = `Olá *${params.customerName}*! Ótimas notícias! 🎉\n\nSeus óculos do pedido *#${params.orderNumber}* já estão prontos e passaram pelo nosso controle de qualidade.\n\nVocê já pode vir retirá-los na *${params.storeName}*. Estamos ansiosos para te ver! 😊`;
+            break;
+        case "surfacing":
+        case "mounting":
+            text = `Olá *${params.customerName}*! Passando para te avisar que seus óculos do pedido *#${params.orderNumber}* já estão em fase de produção no laboratório. Logo logo estarão prontos! 🛠️`;
+            break;
+        default:
+            return; // Don't send for other statuses yet
+    }
+
+    try {
+        await client.sendText(params.whatsappNumber, to, text);
+    } catch (error) {
+        console.error(`Failed to send OS status notification to ${to}:`, error);
+    }
+}

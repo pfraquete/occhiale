@@ -9,6 +9,7 @@ import {
   updateOrderStatus,
   getOrderById,
 } from "@/lib/supabase/queries/dashboard-orders";
+import { ensureServiceOrder } from "@/lib/orders/service-order-utils";
 
 export interface ActionResult {
   success: boolean;
@@ -51,6 +52,12 @@ export async function updateOrderStatusAction(
 
   try {
     await updateOrderStatus(orderId, newStatus);
+
+    // If transitioning to confirmed, ensure OS
+    if (newStatus === "confirmed") {
+      await ensureServiceOrder(orderId);
+    }
+
     revalidatePath("/dashboard/pedidos");
     revalidatePath(`/dashboard/pedidos/${orderId}`);
     return { success: true };

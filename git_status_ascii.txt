@@ -1,0 +1,20 @@
+ M src/app/api/webhooks/pagarme/route.ts
+ M src/components/dashboard/sidebar-nav-items.ts
+ M src/lib/actions/orders.ts
+ M src/lib/evolution/notifications.ts
+ M src/lib/supabase/queries/orders.ts
+ M src/lib/types/database.ts
+?? git_status.txt
+?? git_status_ascii.txt
+?? src/app/(dashboard)/dashboard/ordens-servico/
+?? src/app/(dashboard)/dashboard/pos/
+?? src/components/dashboard/os-status-badge.tsx
+?? src/components/dashboard/os-table.tsx
+?? src/components/dashboard/pos/
+?? src/components/dashboard/update-os-status-form.tsx
+?? src/lib/actions/pos.ts
+?? src/lib/actions/service-order.ts
+?? src/lib/orders/
+?? src/lib/supabase/queries/service-orders.ts
+?? supabase/migrations/00010_service_orders.sql
+?? supabase/migrations/00011_pos_source.sql

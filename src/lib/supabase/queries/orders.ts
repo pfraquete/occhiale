@@ -167,7 +167,7 @@ export async function decrementStock(
   const insufficientStock: string[] = [];
 
   for (const item of items) {
-    const { data, error } = await supabase.rpc("decrement_stock", {
+    const { data, error } = await supabase.rpc("decrement_stock" as any, {
       p_product_id: item.productId,
       p_quantity: item.quantity,
     });
@@ -197,7 +197,7 @@ export async function restoreStock(
   const supabase = createServiceRoleClient();
 
   for (const item of items) {
-    const { error } = await supabase.rpc("restore_stock", {
+    const { error } = await supabase.rpc("restore_stock" as any, {
       p_product_id: item.productId,
       p_quantity: item.quantity,
     });
