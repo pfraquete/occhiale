@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/shared/lib/supabase/server";
 import {
   analyzeProductPhoto,
   analyzeProductPhotos,
-} from "@/lib/ai/product-recognition";
-import { rateLimiters } from "@/lib/utils/rate-limit";
+} from "@/modules/core/ai-agents/lib/product-recognition";
+import { rateLimiters } from "@/shared/lib/utils/rate-limit";
 
 /**
  * POST /api/ai/recognize-product

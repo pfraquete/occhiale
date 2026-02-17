@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@/shared/lib/utils/cn";
 import { Check, Clock, Package, Truck, MapPin, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 

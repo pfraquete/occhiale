@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/shared/lib/supabase/server";
 import {
   getUserStoreWithRole,
   getDashboardStats,
   getRecentOrders,
-} from "@/lib/supabase/queries/dashboard";
+} from "@/shared/lib/supabase/queries/dashboard";
 import { redirect } from "next/navigation";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { RecentOrdersTable } from "@/components/dashboard/recent-orders-table";

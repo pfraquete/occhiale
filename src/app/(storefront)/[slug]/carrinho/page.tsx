@@ -4,9 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Trash2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
-import { useStore } from "@/components/storefront/store-provider";
-import { formatCentsToBRL } from "@/lib/utils/format";
-import { QuantitySelector } from "@/components/storefront/quantity-selector";
+import { useStore } from "@/modules/vertical/otica/components/storefront/store-provider";
+import { formatCentsToBRL } from "@/shared/lib/utils/format";
+import { QuantitySelector } from "@/modules/vertical/otica/components/storefront/quantity-selector";
 
 export default function CarrinhoPage() {
   const { items, removeItem, updateQuantity, clearCart } = useCart();

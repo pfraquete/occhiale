@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { createServiceRoleClient } from "@/shared/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 

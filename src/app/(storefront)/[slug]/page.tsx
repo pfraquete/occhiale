@@ -2,11 +2,11 @@ import { notFound } from "next/navigation";
 import {
   getStoreBySlug,
   getFeaturedProducts,
-} from "@/lib/supabase/queries/stores";
-import { HeroBanner } from "@/components/storefront/hero-banner";
-import { FeaturedProducts } from "@/components/storefront/featured-products";
-import { CategoriesShowcase } from "@/components/storefront/categories-showcase";
-import { TrustBadges } from "@/components/storefront/trust-badges";
+} from "@/shared/lib/supabase/queries/stores";
+import { HeroBanner } from "@/modules/vertical/otica/components/storefront/hero-banner";
+import { FeaturedProducts } from "@/modules/vertical/otica/components/storefront/featured-products";
+import { CategoriesShowcase } from "@/modules/vertical/otica/components/storefront/categories-showcase";
+import { TrustBadges } from "@/modules/vertical/otica/components/storefront/trust-badges";
 
 interface StoreHomePageProps {
   params: Promise<{ slug: string }>;

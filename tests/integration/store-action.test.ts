@@ -11,7 +11,7 @@ const { mockFrom, mockRpc, mockGetUser } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@/shared/lib/supabase/server", () => ({
   createClient: vi.fn().mockResolvedValue({
     auth: {
       getUser: mockGetUser,
@@ -21,7 +21,7 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
+vi.mock("@/shared/lib/supabase/admin", () => ({
   createServiceRoleClient: vi.fn(() => ({
     from: mockFrom,
     rpc: mockRpc,
@@ -32,7 +32,7 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-import { createStoreAction, checkSlugAvailability } from "@/lib/actions/store";
+import { createStoreAction, checkSlugAvailability } from "@/modules/vertical/otica/actions/store";
 
 describe("createStoreAction", () => {
   beforeEach(() => {

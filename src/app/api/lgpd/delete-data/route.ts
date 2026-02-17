@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { createClient } from "@/shared/lib/supabase/server";
+import { createServiceRoleClient } from "@/shared/lib/supabase/admin";
 
 /**
  * LGPD Data Deletion Request

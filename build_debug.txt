@@ -1,0 +1,93 @@
+
+> occhiale@0.1.0 build
+> next build
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\pedro\OneDrive\Desktop\OCCHIALE\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\pedro\OneDrive\Desktop\OCCHIALE\occhiale\package-lock.json
+
+▲ Next.js 16.1.6 (Turbopack)
+- Experiments (use with caution):
+  · optimizePackageImports
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.4s
+  Running TypeScript ...
+  Collecting page data using 19 workers ...
+  Generating static pages using 19 workers (0/28) ...
+  Generating static pages using 19 workers (7/28) 
+  Generating static pages using 19 workers (14/28) 
+  Generating static pages using 19 workers (21/28) 
+✓ Generating static pages using 19 workers (28/28) in 331.4ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /[slug]
+├ ƒ /[slug]/calibrar-lente
+├ ƒ /[slug]/carrinho
+├ ƒ /[slug]/catalogo
+├ ƒ /[slug]/checkout
+├ ƒ /[slug]/checkout/confirmacao
+├ ƒ /[slug]/medir-rosto
+├ ƒ /[slug]/p/[pageSlug]
+├ ƒ /[slug]/produto/[productId]
+├ ƒ /api/ai/chat
+├ ƒ /api/ai/face-measurement
+├ ƒ /api/ai/lens-calibration
+├ ƒ /api/ai/match-frames
+├ ƒ /api/ai/recognize-product
+├ ƒ /api/checkout
+├ ƒ /api/crm/process
+├ ƒ /api/health
+├ ƒ /api/lgpd/delete-data
+├ ƒ /api/meilisearch/cron
+├ ƒ /api/meilisearch/sync
+├ ƒ /api/push/subscribe
+├ ƒ /api/webhooks/evolution
+├ ƒ /api/webhooks/fiscal
+├ ƒ /api/webhooks/pagarme
+├ ƒ /api/whatsapp/instance
+├ ƒ /api/whatsapp/messages
+├ ○ /cadastro
+├ ƒ /dashboard
+├ ƒ /dashboard/analytics
+├ ƒ /dashboard/clientes
+├ ƒ /dashboard/clientes/[customerId]
+├ ƒ /dashboard/configuracoes
+├ ƒ /dashboard/configuracoes/equipe
+├ ƒ /dashboard/configuracoes/frete
+├ ƒ /dashboard/configuracoes/pagamentos
+├ ƒ /dashboard/configuracoes/whatsapp
+├ ƒ /dashboard/crm
+├ ƒ /dashboard/inventario
+├ ƒ /dashboard/ordens-servico
+├ ƒ /dashboard/ordens-servico/[id]
+├ ƒ /dashboard/pedidos
+├ ƒ /dashboard/pedidos/[orderId]
+├ ƒ /dashboard/pos
+├ ƒ /dashboard/produtos
+├ ƒ /dashboard/produtos/[productId]
+├ ƒ /dashboard/produtos/novo
+├ ƒ /dashboard/seo
+├ ƒ /dashboard/whatsapp
+├ ○ /login
+├ ƒ /onboarding
+├ ○ /privacidade
+├ ○ /recuperar-senha
+├ ○ /redefinir-senha
+├ ○ /robots.txt
+├ ƒ /sitemap.xml
+└ ○ /termos
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

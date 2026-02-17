@@ -1,4 +1,4 @@
-import { formatPhone } from "@/lib/utils/format";
+import { formatPhone } from "@/shared/lib/utils/format";
 import { User, Mail, Phone } from "lucide-react";
 
 interface OrderCustomerInfoProps {

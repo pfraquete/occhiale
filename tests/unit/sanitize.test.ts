@@ -4,7 +4,7 @@ import {
   sanitizeMeiliFilter,
   isValidUUID,
   isValidHttpUrl,
-} from "@/lib/utils/sanitize";
+} from "@/shared/lib/utils/sanitize";
 
 // ============================================
 // sanitizePostgrestFilter

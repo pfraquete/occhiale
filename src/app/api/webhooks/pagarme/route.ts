@@ -4,15 +4,15 @@
 // ============================================
 
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyPagarmeSignature } from "@/lib/pagarme/webhook";
+import { verifyPagarmeSignature } from "@/modules/core/financeiro/lib/pagarme/webhook";
 import {
   updateOrderPayment,
   getOrderByPaymentId,
   restoreStock
-} from "@/lib/supabase/queries/orders";
-import { sendOrderPaidNotification, sendPaymentFailedNotification } from "@/lib/evolution/notifications";
-import { ensureServiceOrder } from "@/lib/orders/service-order-utils";
-import type { PagarmeWebhookEvent } from "@/lib/pagarme/types";
+} from "@/shared/lib/supabase/queries/orders";
+import { sendOrderPaidNotification, sendPaymentFailedNotification } from "@/modules/core/whatsapp/lib/evolution/notifications";
+import { ensureServiceOrder } from "@/modules/vertical/otica/lib/orders/service-order-utils";
+import type { PagarmeWebhookEvent } from "@/modules/core/financeiro/lib/pagarme/types";
 
 /**
  * Pagar.me sends webhooks for payment events.

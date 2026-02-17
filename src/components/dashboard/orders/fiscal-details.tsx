@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/shared/ui/components/badge";
+import { Button } from "@/shared/ui/components/button";
 import { FileText, Download, XCircle, Loader2 } from "lucide-react";
-import { formatCentsToBRL } from "@/lib/utils/format";
+import { formatCentsToBRL } from "@/shared/lib/utils/format";
 
 interface FiscalDetailsProps {
     orderId: string;

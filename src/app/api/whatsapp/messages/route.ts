@@ -5,9 +5,9 @@
 // ============================================
 
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { getMessagesForConversation } from "@/lib/supabase/queries/whatsapp";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getMessagesForConversation } from "@/shared/lib/supabase/queries/whatsapp";
+import { createServiceRoleClient } from "@/shared/lib/supabase/admin";
 
 /**
  * GET /api/whatsapp/messages?conversationId=xxx&limit=50&before=xxx

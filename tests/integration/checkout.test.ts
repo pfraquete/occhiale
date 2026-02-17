@@ -10,14 +10,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockRpc = vi.fn();
 const mockFrom = vi.fn();
 
-vi.mock("@/lib/supabase/admin", () => ({
+vi.mock("@/shared/lib/supabase/admin", () => ({
   createServiceRoleClient: vi.fn(() => ({
     rpc: mockRpc,
     from: mockFrom,
   })),
 }));
 
-import { decrementStock, restoreStock } from "@/lib/supabase/queries/orders";
+import { decrementStock, restoreStock } from "@/shared/lib/supabase/queries/orders";
 
 describe("decrementStock", () => {
   beforeEach(() => {

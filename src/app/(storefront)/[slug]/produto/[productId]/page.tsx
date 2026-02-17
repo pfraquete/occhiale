@@ -3,15 +3,15 @@ import type { Metadata } from "next";
 import {
   getProductById,
   getRelatedProducts,
-} from "@/lib/supabase/queries/products";
-import { getStoreBySlug } from "@/lib/supabase/queries/stores";
-import { formatCentsToBRL } from "@/lib/utils/format";
-import { getCategoryLabel, type DbCategory } from "@/lib/utils/categories";
-import { ProductImageGallery } from "@/components/storefront/product-image-gallery";
-import { ProductSpecsTable } from "@/components/storefront/product-specs-table";
-import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
-import { Breadcrumbs } from "@/components/storefront/breadcrumbs";
-import { FeaturedProducts } from "@/components/storefront/featured-products";
+} from "@/shared/lib/supabase/queries/products";
+import { getStoreBySlug } from "@/shared/lib/supabase/queries/stores";
+import { formatCentsToBRL } from "@/shared/lib/utils/format";
+import { getCategoryLabel, type DbCategory } from "@/shared/lib/utils/categories";
+import { ProductImageGallery } from "@/modules/vertical/otica/components/storefront/product-image-gallery";
+import { ProductSpecsTable } from "@/modules/vertical/otica/components/storefront/product-specs-table";
+import { AddToCartButton } from "@/modules/vertical/otica/components/storefront/add-to-cart-button";
+import { Breadcrumbs } from "@/modules/vertical/otica/components/storefront/breadcrumbs";
+import { FeaturedProducts } from "@/modules/vertical/otica/components/storefront/featured-products";
 
 interface ProductPageProps {
   params: Promise<{ slug: string; productId: string }>;

@@ -1,0 +1,5 @@
+tests/integration/meilisearch-sync.test.ts(112,20): error TS18048: 'callArgs' is possibly 'undefined'.
+tests/integration/meilisearch-sync.test.ts(126,20): error TS18048: 'callArgs' is possibly 'undefined'.
+tests/integration/meilisearch-sync.test.ts(135,20): error TS18048: 'callArgs' is possibly 'undefined'.
+tests/integration/meilisearch-sync.test.ts(143,20): error TS18048: 'callArgs' is possibly 'undefined'.
+tests/unit/rate-limit.test.ts(10,3): error TS2304: Cannot find name 'afterEach'.

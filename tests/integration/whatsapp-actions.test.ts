@@ -11,7 +11,7 @@ const { mockGetUser, mockFrom, mockAdminFrom } = vi.hoisted(() => ({
   mockAdminFrom: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@/shared/lib/supabase/server", () => ({
   createClient: vi.fn().mockResolvedValue({
     auth: {
       getUser: mockGetUser,
@@ -20,7 +20,7 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
+vi.mock("@/shared/lib/supabase/admin", () => ({
   createServiceRoleClient: vi.fn(() => ({
     from: mockAdminFrom,
   })),
@@ -33,7 +33,7 @@ vi.mock("next/cache", () => ({
 import {
   toggleAiActiveAction,
   sendManualMessageAction,
-} from "@/lib/actions/whatsapp";
+} from "@/modules/core/whatsapp/actions/whatsapp";
 
 describe("WhatsApp Actions - Auth Checks", () => {
   beforeEach(() => {

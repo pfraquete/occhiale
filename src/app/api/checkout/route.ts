@@ -6,26 +6,26 @@
 // ============================================
 
 import { NextResponse, type NextRequest } from "next/server";
-import { checkoutSchema } from "@/lib/validations/checkout";
-import { rateLimiters } from "@/lib/utils/rate-limit";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
-import { findOrCreateCustomer } from "@/lib/supabase/queries/customers";
+import { checkoutSchema } from "@/modules/vertical/otica/lib/validations/checkout";
+import { rateLimiters } from "@/shared/lib/utils/rate-limit";
+import { createServiceRoleClient } from "@/shared/lib/supabase/admin";
+import { findOrCreateCustomer } from "@/shared/lib/supabase/queries/customers";
 import {
   createOrder,
   setOrderPaymentId,
   decrementStock,
   restoreStock,
-} from "@/lib/supabase/queries/orders";
-import type { Json } from "@/lib/types/database";
-import { createPagarmeClient, PagarmeError } from "@/lib/pagarme/client";
-import { generateOrderNumber } from "@/lib/utils/format";
+} from "@/shared/lib/supabase/queries/orders";
+import type { Json } from "@/shared/types/database";
+import { createPagarmeClient, PagarmeError } from "@/modules/core/financeiro/lib/pagarme/client";
+import { generateOrderNumber } from "@/shared/lib/utils/format";
 import type {
   PagarmeOrderRequest,
   PagarmeCustomer,
   PagarmeAddress,
   PagarmeOrderItem,
   PagarmePayment,
-} from "@/lib/pagarme/types";
+} from "@/modules/core/financeiro/lib/pagarme/types";
 
 export async function POST(request: NextRequest) {
   // Rate limiting

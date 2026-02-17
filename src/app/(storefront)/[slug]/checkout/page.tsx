@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/hooks/use-cart";
-import { useStore } from "@/components/storefront/store-provider";
-import { formatCentsToBRL } from "@/lib/utils/format";
-import { fetchAddressByCep } from "@/lib/actions/checkout";
+import { useStore } from "@/modules/vertical/otica/components/storefront/store-provider";
+import { formatCentsToBRL } from "@/shared/lib/utils/format";
+import { fetchAddressByCep } from "@/modules/vertical/otica/actions/checkout";
 import { ShoppingBag, MapPin, CreditCard, ClipboardCheck } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4;

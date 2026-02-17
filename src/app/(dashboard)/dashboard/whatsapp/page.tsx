@@ -3,10 +3,10 @@
 // Dashboard page for managing WhatsApp conversations
 // ============================================
 
-import { createClient } from "@/lib/supabase/server";
-import { getConversationsForStore } from "@/lib/supabase/queries/whatsapp";
-import { WhatsAppMonitor } from "@/components/dashboard/whatsapp/whatsapp-monitor";
-import { WhatsAppEmptyState } from "@/components/dashboard/whatsapp/whatsapp-empty-state";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getConversationsForStore } from "@/shared/lib/supabase/queries/whatsapp";
+import { WhatsAppMonitor } from "@/modules/core/whatsapp/components/whatsapp/whatsapp-monitor";
+import { WhatsAppEmptyState } from "@/modules/core/whatsapp/components/whatsapp/whatsapp-empty-state";
 
 export const metadata = {
   title: "WhatsApp | OCCHIALE Dashboard",

@@ -1,12 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
 import {
   getCustomerById,
   getCustomerOrders,
   getCustomerPrescriptions,
-} from "@/lib/supabase/queries/dashboard-customers";
+} from "@/shared/lib/supabase/queries/dashboard-customers";
 import { redirect, notFound } from "next/navigation";
-import { formatCentsToBRL, formatPhone } from "@/lib/utils/format";
+import { formatCentsToBRL, formatPhone } from "@/shared/lib/utils/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ArrowLeft, User, Mail, Phone, Calendar } from "lucide-react";

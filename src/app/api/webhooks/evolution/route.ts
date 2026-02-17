@@ -4,20 +4,20 @@
 // ============================================
 
 import { NextResponse, type NextRequest } from "next/server";
-import { rateLimiters } from "@/lib/utils/rate-limit";
-import { verifyEvolutionWebhook } from "@/lib/evolution/webhook";
+import { rateLimiters } from "@/shared/lib/utils/rate-limit";
+import { verifyEvolutionWebhook } from "@/modules/core/whatsapp/lib/evolution/webhook";
 import {
   extractPhoneFromJid,
   extractMessageText,
   extractMediaUrl,
   getContentType,
   type EvolutionWebhookData,
-} from "@/lib/evolution/types";
-import { evolutionWebhookPayloadSchema } from "@/lib/validations/whatsapp";
+} from "@/modules/core/whatsapp/lib/evolution/types";
+import { evolutionWebhookPayloadSchema } from "@/modules/core/whatsapp/lib/validations";
 import {
   findOrCreateConversation,
   saveMessage,
-} from "@/lib/supabase/queries/whatsapp";
+} from "@/shared/lib/supabase/queries/whatsapp";
 
 // ------------------------------------------
 // Instance → Store cache (avoids full table scan on every webhook)
@@ -185,7 +185,7 @@ async function resolveStoreId(instanceName: string): Promise<string | null> {
     return cached.storeId;
   }
 
-  const { createServiceRoleClient } = await import("@/lib/supabase/admin");
+  const { createServiceRoleClient } = await import("@/shared/lib/supabase/admin");
   const supabase = createServiceRoleClient();
 
   // Strategy 1: Try parsing "occhiale-{uuid}" format (no DB query needed)

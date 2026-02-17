@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateOSStatusAction } from "@/lib/actions/service-order";
+import { updateOSStatusAction } from "@/modules/vertical/otica/actions/service-order";
 
 const statusTransitions: Record<string, string[]> = {
     lab_pending: ["waiting_material", "surfacing", "cancelled"],

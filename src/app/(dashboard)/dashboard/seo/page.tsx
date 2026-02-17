@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
 import { redirect } from "next/navigation";
 import { SeoDashboard } from "./seo-dashboard";
 
@@ -29,7 +29,7 @@ export default async function SeoPage() {
       storeId={membership.storeId}
       storeSlug={membership.store.slug}
       initialPages={
-        (pages ?? []) as unknown as import("@/lib/actions/seo-pages").SeoPage[]
+        (pages ?? []) as unknown as import("@/modules/vertical/otica/actions/seo-pages").SeoPage[]
       }
     />
   );

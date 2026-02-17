@@ -1,6 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
-import { getServiceOrderById } from "@/lib/supabase/queries/service-orders";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
+import { getServiceOrderById } from "@/shared/lib/supabase/queries/service-orders";
 import { redirect, notFound } from "next/navigation";
 import { OSStatusBadge } from "@/components/dashboard/os-status-badge";
 import { format } from "date-fns";

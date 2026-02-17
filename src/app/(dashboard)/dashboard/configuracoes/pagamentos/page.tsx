@@ -1,5 +1,5 @@
 import { SettingsNav } from "@/components/dashboard/settings-nav";
-import { PaymentSettingsInfo } from "@/components/dashboard/payment-settings-info";
+import { PaymentSettingsInfo } from "@/modules/core/financeiro/components/payment-settings-info";
 
 export const metadata = {
   title: "Pagamentos — Configurações — OCCHIALE",

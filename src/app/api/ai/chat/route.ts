@@ -6,17 +6,17 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import crypto from "crypto";
-import { rateLimiters } from "@/lib/utils/rate-limit";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
-import { processMessage } from "@/lib/ai/claude-client";
-import { getEvolutionClient } from "@/lib/evolution/client";
+import { rateLimiters } from "@/shared/lib/utils/rate-limit";
+import { createServiceRoleClient } from "@/shared/lib/supabase/admin";
+import { processMessage } from "@/modules/core/ai-agents/lib/claude-client";
+import { getEvolutionClient } from "@/modules/core/whatsapp/lib/evolution/client";
 import {
   getConversationById,
   getConversationHistory,
   saveMessage,
   updateConversationState,
-} from "@/lib/supabase/queries/whatsapp";
-import { aiChatRequestSchema } from "@/lib/validations/whatsapp";
+} from "@/shared/lib/supabase/queries/whatsapp";
+import { aiChatRequestSchema } from "@/modules/core/whatsapp/lib/validations";
 
 /**
  * Timing-safe comparison of two strings.

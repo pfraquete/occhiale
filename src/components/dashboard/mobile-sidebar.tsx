@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, Glasses } from "lucide-react";
-import { Sheet } from "@/components/ui/sheet";
+import { Sheet } from "@/shared/ui/components/sheet";
 import { sidebarNavItems } from "./sidebar-nav-items";
 import { SidebarNavItem } from "./sidebar-nav-item";
 import { useStore } from "@/hooks/use-store";

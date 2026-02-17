@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getStoreBySlug } from "@/lib/supabase/queries/stores";
-import { StoreProvider } from "@/components/storefront/store-provider";
-import { StoreHeader } from "@/components/storefront/store-header";
-import { StoreFooter } from "@/components/storefront/store-footer";
-import { WhatsAppFab } from "@/components/storefront/whatsapp-fab";
+import { getStoreBySlug } from "@/shared/lib/supabase/queries/stores";
+import { StoreProvider } from "@/modules/vertical/otica/components/storefront/store-provider";
+import { StoreHeader } from "@/modules/vertical/otica/components/storefront/store-header";
+import { StoreFooter } from "@/modules/vertical/otica/components/storefront/store-footer";
+import { WhatsAppFab } from "@/modules/vertical/otica/components/storefront/whatsapp-fab";
 
 interface StoreLayoutProps {
   children: React.ReactNode;

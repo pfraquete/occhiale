@@ -1,6 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
-import { getStoreMembers } from "@/lib/supabase/queries/dashboard-store";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
+import { getStoreMembers } from "@/shared/lib/supabase/queries/dashboard-store";
 import { redirect } from "next/navigation";
 import { SettingsNav } from "@/components/dashboard/settings-nav";
 import { TeamMembersList } from "@/components/dashboard/team-members-list";

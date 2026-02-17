@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/shared/lib/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 interface RealtimeMessage {

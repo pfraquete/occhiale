@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@/shared/lib/utils/cn";
 import { PanelLeftClose, PanelLeft, Glasses } from "lucide-react";
 import { sidebarNavItems } from "./sidebar-nav-items";
 import { SidebarNavItem } from "./sidebar-nav-item";

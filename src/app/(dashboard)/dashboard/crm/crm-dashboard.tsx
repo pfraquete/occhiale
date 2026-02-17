@@ -5,7 +5,7 @@ import {
   updateAutomationAction,
   deleteAutomationAction,
   type CrmAutomation,
-} from "@/lib/actions/crm";
+} from "@/modules/core/crm/actions/crm";
 
 const TRIGGER_LABELS: Record<string, string> = {
   post_purchase: "Pós-compra",

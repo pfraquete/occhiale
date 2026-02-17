@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeFacePhoto } from "@/lib/ai/face-measurement";
-import { rateLimiters } from "@/lib/utils/rate-limit";
+import { analyzeFacePhoto } from "@/modules/core/ai-agents/lib/face-measurement";
+import { rateLimiters } from "@/shared/lib/utils/rate-limit";
 
 /**
  * POST /api/ai/face-measurement

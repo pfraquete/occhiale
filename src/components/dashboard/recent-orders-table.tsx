@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatCentsToBRL } from "@/lib/utils/format";
+import { formatCentsToBRL } from "@/shared/lib/utils/format";
 import { OrderStatusBadge } from "./order-status-badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

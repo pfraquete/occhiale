@@ -2,8 +2,8 @@
 
 import { useTransition } from "react";
 import { Trash2 } from "lucide-react";
-import { removeMemberAction } from "@/lib/actions/store-settings";
-import { Avatar } from "@/components/ui/avatar";
+import { removeMemberAction } from "@/modules/vertical/otica/actions/store-settings";
+import { Avatar } from "@/shared/ui/components/avatar";
 
 const roleLabels: Record<string, string> = {
   owner: "Proprietário",

@@ -1,6 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
-import { getOrders } from "@/lib/supabase/queries/dashboard-orders";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
+import { getOrders } from "@/shared/lib/supabase/queries/dashboard-orders";
 import { redirect } from "next/navigation";
 import { OrdersFilters } from "@/components/dashboard/orders-filters";
 import { OrdersTable } from "@/components/dashboard/orders-table";

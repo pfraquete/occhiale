@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
 import { redirect } from "next/navigation";
 import { SettingsNav } from "@/components/dashboard/settings-nav";
 import { ShippingSettingsForm } from "@/components/dashboard/shipping-settings-form";

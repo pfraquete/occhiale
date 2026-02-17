@@ -6,11 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   shippingSettingsSchema,
   type ShippingSettingsInput,
-} from "@/lib/validations/dashboard";
-import { updateShippingSettingsAction } from "@/lib/actions/store-settings";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/modules/vertical/otica/lib/validations/dashboard";
+import { updateShippingSettingsAction } from "@/modules/vertical/otica/actions/store-settings";
+import { Button } from "@/shared/ui/components/button";
+import { Input } from "@/shared/ui/components/input";
+import { Label } from "@/shared/ui/components/label";
 
 interface ShippingSettingsFormProps {
   storeId: string;

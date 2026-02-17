@@ -22,7 +22,7 @@ import type {
   PaymentMethodBreakdown,
   OrderStatusBreakdown,
   CustomerGrowth,
-} from "@/lib/supabase/queries/analytics";
+} from "@/shared/lib/supabase/queries/analytics";
 
 // ------------------------------------------
 // Color palette (dark mode friendly)

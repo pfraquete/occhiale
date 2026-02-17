@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { createServiceRoleClient } from "@/shared/lib/supabase/admin";
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://occhiale.com.br";

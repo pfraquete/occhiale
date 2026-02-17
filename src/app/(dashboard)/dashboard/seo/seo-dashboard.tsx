@@ -5,7 +5,7 @@ import {
   updateSeoPageAction,
   deleteSeoPageAction,
   type SeoPage,
-} from "@/lib/actions/seo-pages";
+} from "@/modules/vertical/otica/actions/seo-pages";
 
 const PAGE_TYPE_LABELS: Record<string, string> = {
   category: "Categoria",

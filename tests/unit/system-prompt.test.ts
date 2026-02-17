@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt } from "@/lib/ai/system-prompt";
+import { buildSystemPrompt } from "@/modules/core/ai-agents/lib/system-prompt";
 
 describe("buildSystemPrompt", () => {
   const baseContext = {

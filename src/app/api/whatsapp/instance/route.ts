@@ -4,9 +4,9 @@
 // ============================================
 
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
-import { getEvolutionClient, EvolutionApiError } from "@/lib/evolution/client";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
+import { getEvolutionClient, EvolutionApiError } from "@/modules/core/whatsapp/lib/evolution/client";
 
 /**
  * GET /api/whatsapp/instance?storeId=xxx

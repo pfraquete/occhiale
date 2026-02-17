@@ -4,8 +4,8 @@ import {
   type Prescription,
   type FacialMeasurements,
   type FrameSpecs,
-} from "@/lib/ai/lens-calibration";
-import { rateLimiters } from "@/lib/utils/rate-limit";
+} from "@/modules/core/ai-agents/lib/lens-calibration";
+import { rateLimiters } from "@/shared/lib/utils/rate-limit";
 
 /**
  * POST /api/ai/lens-calibration

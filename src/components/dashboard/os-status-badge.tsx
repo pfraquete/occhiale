@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import { ServiceOrderStatus } from "@/lib/supabase/queries/service-orders";
+import { Badge } from "@/shared/ui/components/badge";
+import { ServiceOrderStatus } from "@/shared/lib/supabase/queries/service-orders";
 
 interface OSStatusBadgeProps {
     status: ServiceOrderStatus | string;

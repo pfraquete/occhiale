@@ -1,15 +1,15 @@
 import { notFound } from "next/navigation";
-import { getStoreBySlug } from "@/lib/supabase/queries/stores";
+import { getStoreBySlug } from "@/shared/lib/supabase/queries/stores";
 import {
   getFilteredProducts,
   getBrandsForStore,
-} from "@/lib/supabase/queries/products";
-import { ProductCard } from "@/components/storefront/product-card";
-import { CatalogFilters } from "@/components/storefront/catalog-filters";
-import { CatalogSort } from "@/components/storefront/catalog-sort";
-import { Pagination } from "@/components/storefront/pagination";
-import { EmptyState } from "@/components/storefront/empty-state";
-import { ActiveFilters } from "@/components/storefront/active-filters";
+} from "@/shared/lib/supabase/queries/products";
+import { ProductCard } from "@/modules/vertical/otica/components/storefront/product-card";
+import { CatalogFilters } from "@/modules/vertical/otica/components/storefront/catalog-filters";
+import { CatalogSort } from "@/modules/vertical/otica/components/storefront/catalog-sort";
+import { Pagination } from "@/modules/vertical/otica/components/storefront/pagination";
+import { EmptyState } from "@/modules/vertical/otica/components/storefront/empty-state";
+import { ActiveFilters } from "@/modules/vertical/otica/components/storefront/active-filters";
 
 interface CatalogoPageProps {
   params: Promise<{ slug: string }>;

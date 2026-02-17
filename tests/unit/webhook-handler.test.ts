@@ -2,26 +2,26 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "@/app/api/webhooks/pagarme/route";
 import { NextRequest } from "next/server";
-import { verifyPagarmeSignature } from "@/lib/pagarme/webhook";
+import { verifyPagarmeSignature } from "@/modules/core/financeiro/lib/pagarme/webhook";
 import {
     updateOrderPayment,
     getOrderByPaymentId,
     restoreStock
-} from "@/lib/supabase/queries/orders";
-import { sendOrderPaidNotification, sendPaymentFailedNotification } from "@/lib/evolution/notifications";
+} from "@/shared/lib/supabase/queries/orders";
+import { sendOrderPaidNotification, sendPaymentFailedNotification } from "@/modules/core/whatsapp/lib/evolution/notifications";
 
 // Mock dependencies
-vi.mock("@/lib/pagarme/webhook", () => ({
+vi.mock("@/modules/core/financeiro/lib/pagarme/webhook", () => ({
     verifyPagarmeSignature: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/queries/orders", () => ({
+vi.mock("@/shared/lib/supabase/queries/orders", () => ({
     updateOrderPayment: vi.fn(),
     getOrderByPaymentId: vi.fn(),
     restoreStock: vi.fn(),
 }));
 
-vi.mock("@/lib/evolution/notifications", () => ({
+vi.mock("@/modules/core/whatsapp/lib/evolution/notifications", () => ({
     sendOrderPaidNotification: vi.fn(),
     sendPaymentFailedNotification: vi.fn(),
 }));

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateOrderStatusAction } from "@/lib/actions/orders";
-import { validStatusTransitions } from "@/lib/validations/dashboard";
+import { updateOrderStatusAction } from "@/modules/vertical/otica/actions/orders";
+import { validStatusTransitions } from "@/modules/vertical/otica/lib/validations/dashboard";
 
 const statusLabels: Record<string, string> = {
   pending: "Pendente",

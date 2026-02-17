@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { resetPasswordAction } from "@/lib/actions/auth";
+import { resetPasswordAction } from "@/modules/core/auth/actions/auth";
 import { Mail } from "lucide-react";
 
 export default function RecuperarSenhaPage() {

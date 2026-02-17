@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
-import { getCustomers } from "@/lib/supabase/queries/dashboard-customers";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
+import { getCustomers } from "@/shared/lib/supabase/queries/dashboard-customers";
 import { redirect } from "next/navigation";
-import { CustomersFilters } from "@/components/dashboard/customers-filters";
-import { CustomersTable } from "@/components/dashboard/customers-table";
+import { CustomersFilters } from "@/modules/core/crm/components/customers-filters";
+import { CustomersTable } from "@/modules/core/crm/components/customers-table";
 import { Suspense } from "react";
 
 export const metadata = {

@@ -2,10 +2,10 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, ExternalLink, ChevronRight } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar } from "@/shared/ui/components/avatar";
 import { MobileSidebar } from "./mobile-sidebar";
 import { useStore } from "@/hooks/use-store";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/shared/lib/supabase/client";
 import { useState } from "react";
 
 /** Map pathname segments to pt-BR labels */

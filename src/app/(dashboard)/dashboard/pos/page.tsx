@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
 import { redirect } from "next/navigation";
-import { POSContainer } from "@/components/dashboard/pos/pos-container";
+import { POSContainer } from "@/modules/vertical/otica/components/pos/pos-container";
 
 export default async function POSPage() {
     const supabase = await createClient();

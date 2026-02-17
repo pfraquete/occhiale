@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
 import { redirect } from "next/navigation";
 import { SettingsNav } from "@/components/dashboard/settings-nav";
-import { WhatsAppConnection } from "@/components/dashboard/whatsapp-connection";
+import { WhatsAppConnection } from "@/modules/core/whatsapp/components/whatsapp-connection";
 
 export const metadata = {
   title: "WhatsApp — Configurações — OCCHIALE",

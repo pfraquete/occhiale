@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/email/client";
+import { createServiceRoleClient } from "@/shared/lib/supabase/admin";
+import { sendEmail } from "@/shared/lib/email/client";
 import {
   orderConfirmationEmail,
   abandonedCartEmail,
-} from "@/lib/email/templates";
+} from "@/shared/lib/email/templates";
 
 /**
  * CRM Automation Processor — Cron Job
@@ -176,7 +176,7 @@ async function processAbandonedCarts(supabase: any): Promise<number> {
       ) {
         // Send WhatsApp message via Evolution API
         try {
-          const { getEvolutionClient } = await import("@/lib/evolution/client");
+          const { getEvolutionClient } = await import("@/modules/core/whatsapp/lib/evolution/client");
           const evolution = getEvolutionClient();
           const message = automation.template
             .replace("{{nome}}", conv.customer_name ?? "")
@@ -249,7 +249,7 @@ async function processBirthdays(supabase: any): Promise<number> {
         customer.phone
       ) {
         try {
-          const { getEvolutionClient } = await import("@/lib/evolution/client");
+          const { getEvolutionClient } = await import("@/modules/core/whatsapp/lib/evolution/client");
           const evolution = getEvolutionClient();
           const message = automation.template
             .replace("{{nome}}", customer.name ?? "")
@@ -307,7 +307,7 @@ async function processInactivity(supabase: any): Promise<number> {
         customer.phone
       ) {
         try {
-          const { getEvolutionClient } = await import("@/lib/evolution/client");
+          const { getEvolutionClient } = await import("@/modules/core/whatsapp/lib/evolution/client");
           const evolution = getEvolutionClient();
           const message = automation.template
             .replace("{{nome}}", customer.name ?? "")

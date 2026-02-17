@@ -30,7 +30,7 @@ const mockIndex = {
 };
 
 // Mock the entire client module to bypass the singleton
-vi.mock("@/lib/meilisearch/client", () => ({
+vi.mock("@/shared/lib/meilisearch/client", () => ({
   getProductsIndex: vi.fn(() => mockIndex),
   searchProducts: vi.fn(
     async (
@@ -44,7 +44,7 @@ vi.mock("@/lib/meilisearch/client", () => ({
       }
     ) => {
       // Replicate the real filter-building logic to test sanitization
-      const { sanitizeMeiliFilter } = await import("@/lib/utils/sanitize");
+      const { sanitizeMeiliFilter } = await import("@/shared/lib/utils/sanitize");
       const safeStoreId = sanitizeMeiliFilter(storeId);
       const filters: string[] = [
         `store_id = "${safeStoreId}"`,
@@ -67,14 +67,14 @@ vi.mock("@/lib/meilisearch/client", () => ({
   isMeiliHealthy: vi.fn().mockResolvedValue(true),
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
+vi.mock("@/shared/lib/supabase/admin", () => ({
   createServiceRoleClient: vi.fn(() => ({
     from: mockSupabaseFrom,
   })),
 }));
 
-import { searchProducts } from "@/lib/meilisearch/client";
-import { sanitizeMeiliFilter } from "@/lib/utils/sanitize";
+import { searchProducts } from "@/shared/lib/meilisearch/client";
+import { sanitizeMeiliFilter } from "@/shared/lib/utils/sanitize";
 
 describe("searchProducts", () => {
   beforeEach(() => {

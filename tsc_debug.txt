@@ -1,0 +1,4 @@
+src/modules/vertical/otica/actions/store-settings.ts(8,8): error TS2307: Cannot find module '@/modules/vertical/otica/lib/validations/dashboard' or its corresponding type declarations.
+src/modules/vertical/otica/actions/store-settings.ts(12,8): error TS2307: Cannot find module '@/shared/lib/supabase/queries/dashboard-store' or its corresponding type declarations.
+src/modules/vertical/otica/actions/store-settings.ts(13,30): error TS2307: Cannot find module '@/shared/lib/supabase/server' or its corresponding type declarations.
+src/modules/vertical/otica/actions/store-settings.ts(14,41): error TS2307: Cannot find module '@/shared/lib/supabase/admin' or its corresponding type declarations.

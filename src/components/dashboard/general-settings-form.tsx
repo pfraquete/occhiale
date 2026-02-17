@@ -6,12 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   generalSettingsSchema,
   type GeneralSettingsInput,
-} from "@/lib/validations/dashboard";
-import { updateGeneralSettingsAction } from "@/lib/actions/store-settings";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/modules/vertical/otica/lib/validations/dashboard";
+import { updateGeneralSettingsAction } from "@/modules/vertical/otica/actions/store-settings";
+import { Button } from "@/shared/ui/components/button";
+import { Input } from "@/shared/ui/components/input";
+import { Label } from "@/shared/ui/components/label";
+import { Textarea } from "@/shared/ui/components/textarea";
 
 interface GeneralSettingsFormProps {
   storeId: string;

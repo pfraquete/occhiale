@@ -1,7 +1,7 @@
 import { DollarSign, ShoppingBag, TrendingUp, Package, Users, RefreshCw } from "lucide-react";
 import { StatsCard } from "./stats-card";
-import { formatCentsToBRL } from "@/lib/utils/format";
-import type { DashboardStats } from "@/lib/supabase/queries/dashboard";
+import { formatCentsToBRL } from "@/shared/lib/utils/format";
+import type { DashboardStats } from "@/shared/lib/supabase/queries/dashboard";
 
 interface StatsCardsProps {
   stats: DashboardStats;

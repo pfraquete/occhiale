@@ -7,8 +7,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { MeiliSearch } from "meilisearch";
 import crypto from "crypto";
-import { configureIndices } from "@/lib/meilisearch/indices";
-import { syncAllProducts, syncStoreProducts } from "@/lib/meilisearch/sync";
+import { configureIndices } from "@/shared/lib/meilisearch/indices";
+import { syncAllProducts, syncStoreProducts } from "@/shared/lib/meilisearch/sync";
 
 /**
  * Timing-safe comparison of two strings.

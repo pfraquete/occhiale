@@ -1,7 +1,7 @@
 "use client";
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createStoreAction, checkSlugAvailability } from "@/lib/actions/store";
+import { createStoreAction, checkSlugAvailability } from "@/modules/vertical/otica/actions/store";
 import { Store, Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 function slugify(text: string): string {

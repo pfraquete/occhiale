@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
-import { getProductById } from "@/lib/supabase/queries/dashboard-products";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
+import { getProductById } from "@/shared/lib/supabase/queries/dashboard-products";
 import { redirect, notFound } from "next/navigation";
-import { ProductForm } from "@/components/dashboard/product-form";
+import { ProductForm } from "@/modules/core/produtos/components/product-form";
 
 interface PageProps {
   params: Promise<{ productId: string }>;

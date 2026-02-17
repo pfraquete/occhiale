@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { createServiceRoleClient } from "@/shared/lib/supabase/admin";
 import {
   matchFramesToFace,
   type FaceMeasurements,
-} from "@/lib/ai/face-measurement";
-import { rateLimiters } from "@/lib/utils/rate-limit";
+} from "@/modules/core/ai-agents/lib/face-measurement";
+import { rateLimiters } from "@/shared/lib/utils/rate-limit";
 
 /**
  * POST /api/ai/match-frames

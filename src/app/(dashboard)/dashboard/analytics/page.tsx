@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
 import {
   getDailySales,
   getTopProducts,
@@ -7,7 +7,7 @@ import {
   getOrderStatusBreakdown,
   getCustomerGrowth,
   getConversionMetrics,
-} from "@/lib/supabase/queries/analytics";
+} from "@/shared/lib/supabase/queries/analytics";
 import { redirect } from "next/navigation";
 import {
   SalesChart,

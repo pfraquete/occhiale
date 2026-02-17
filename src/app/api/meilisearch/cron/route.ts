@@ -5,8 +5,8 @@
 // ============================================
 
 import { NextResponse, type NextRequest } from "next/server";
-import { syncAllProducts } from "@/lib/meilisearch/sync";
-import { configureIndices } from "@/lib/meilisearch/indices";
+import { syncAllProducts } from "@/shared/lib/meilisearch/sync";
+import { configureIndices } from "@/shared/lib/meilisearch/indices";
 import { MeiliSearch } from "meilisearch";
 
 export const maxDuration = 60; // Allow up to 60s for Vercel

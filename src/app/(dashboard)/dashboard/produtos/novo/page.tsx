@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
 import { redirect } from "next/navigation";
-import { ProductForm } from "@/components/dashboard/product-form";
+import { ProductForm } from "@/modules/core/produtos/components/product-form";
 
 export const metadata = {
   title: "Novo Produto — OCCHIALE",

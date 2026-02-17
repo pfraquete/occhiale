@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/shared/lib/supabase/server";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { Package, TrendingUp, AlertTriangle, History } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/stats-card";
-import { getInventoryMovements, getABCAnalysis, getExpiringBatchesCount } from "@/lib/supabase/queries/inventory";
-import { getProducts } from "@/lib/supabase/queries/dashboard-products";
-import { InventoryView } from "@/components/dashboard/inventory/inventory-view";
+import { getInventoryMovements, getABCAnalysis, getExpiringBatchesCount } from "@/shared/lib/supabase/queries/inventory";
+import { getProducts } from "@/shared/lib/supabase/queries/dashboard-products";
+import { InventoryView } from "@/modules/core/produtos/components/inventory/inventory-view";
 import { redirect } from "next/navigation";
 
 export default async function InventarioPage() {

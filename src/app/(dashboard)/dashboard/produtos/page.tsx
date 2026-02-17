@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserStoreWithRole } from "@/lib/supabase/queries/dashboard";
-import { getProducts } from "@/lib/supabase/queries/dashboard-products";
+import { createClient } from "@/shared/lib/supabase/server";
+import { getUserStoreWithRole } from "@/shared/lib/supabase/queries/dashboard";
+import { getProducts } from "@/shared/lib/supabase/queries/dashboard-products";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { ProductsFilters } from "@/components/dashboard/products-filters";
-import { ProductsTable } from "@/components/dashboard/products-table";
+import { ProductsFilters } from "@/modules/core/produtos/components/products-filters";
+import { ProductsTable } from "@/modules/core/produtos/components/products-table";
 import { Suspense } from "react";
 
 export const metadata = {

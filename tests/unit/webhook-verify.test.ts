@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { verifyEvolutionWebhook } from "@/lib/evolution/webhook";
+import { verifyEvolutionWebhook } from "@/modules/core/whatsapp/lib/evolution/webhook";
 
 describe("verifyEvolutionWebhook", () => {
   const ORIGINAL_ENV = process.env;

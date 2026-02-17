@@ -1,5 +1,5 @@
-import { formatCentsToBRL } from "@/lib/utils/format";
-import type { Json } from "@/lib/types/database";
+import { formatCentsToBRL } from "@/shared/lib/utils/format";
+import type { Json } from "@/shared/types/database";
 
 interface OrderItem {
   id: string;
