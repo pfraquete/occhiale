@@ -30,11 +30,23 @@
       "@/*": [
         "./src/*"
       ],
+      "@/core": [
+        "./src/core"
+      ],
+      "@/core/*": [
+        "./src/core/*"
+      ],
       "@/modules/*": [
         "./src/modules/*"
       ],
       "@/shared/*": [
         "./src/shared/*"
+      ],
+      "@/lib/*": [
+        "./src/shared/lib/*"
+      ],
+      "@/ui/*": [
+        "./src/shared/ui/*"
       ]
     }
   },

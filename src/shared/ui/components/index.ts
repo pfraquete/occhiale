@@ -38,3 +38,75 @@ export type { TextareaProps } from "./textarea";
 
 export { Select } from "./select";
 export type { SelectProps } from "./select";
+
+export {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "./dialog";
+export type { DialogProps } from "./dialog";
+
+export {
+  Modal,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalBody,
+  ModalFooter,
+} from "./modal";
+export type { ModalProps } from "./modal";
+
+export {
+  Drawer,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+} from "./drawer";
+export type { DrawerProps } from "./drawer";
+
+export { Toast, ToastContainer, toast, useToast } from "./toast";
+export type { ToastData } from "./toast";
+
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./tooltip";
+
+export {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from "./sheet";
+
+export { Switch } from "./switch";
+
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
+
+export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
+
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "./dropdown-menu";
+
+export { DataTable } from "./data-table";
+
+export { ImageUpload } from "./image-upload";
+
+export { MultiImageUpload } from "./multi-image-upload";
