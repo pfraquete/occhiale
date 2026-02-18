@@ -3,7 +3,10 @@
 // ============================================================================
 
 import { createClient } from "@/shared/lib/supabase/server";
+import type { Database } from "@/shared/types/database";
 import type { AuditLog } from "../types";
+
+type AuditLogInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 
 interface CreateAuditLogParams {
   organizationId: string;
@@ -36,19 +39,25 @@ export async function createAuditLog(
 ): Promise<AuditLog | null> {
   const supabase = await createClient();
 
+  const insertData: AuditLogInsert = {
+    organization_id: params.organizationId,
+    user_id: params.userId ?? null,
+    action: params.action,
+    entity: params.entity,
+    entity_id: params.entityId ?? null,
+    old_data:
+      (params.oldData as Database["public"]["Tables"]["audit_logs"]["Insert"]["old_data"]) ??
+      null,
+    new_data:
+      (params.newData as Database["public"]["Tables"]["audit_logs"]["Insert"]["new_data"]) ??
+      null,
+    ip_address: params.ipAddress ?? null,
+    user_agent: params.userAgent ?? null,
+  };
+
   const { data, error } = await supabase
     .from("audit_logs")
-    .insert({
-      organization_id: params.organizationId,
-      user_id: params.userId ?? null,
-      action: params.action,
-      entity: params.entity,
-      entity_id: params.entityId ?? null,
-      old_data: params.oldData ?? null,
-      new_data: params.newData ?? null,
-      ip_address: params.ipAddress ?? null,
-      user_agent: params.userAgent ?? null,
-    })
+    .insert(insertData)
     .select()
     .single();
 

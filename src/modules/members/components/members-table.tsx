@@ -59,7 +59,7 @@ export function MembersTable({
                 </Badge>
               </td>
               <td className="px-4 py-3">
-                <Badge variant={member.isActive ? "default" : "secondary"}>
+                <Badge variant={member.isActive ? "success" : "outline"}>
                   {member.isActive ? "Ativo" : "Inativo"}
                 </Badge>
               </td>

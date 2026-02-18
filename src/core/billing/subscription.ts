@@ -6,6 +6,7 @@ import { createClient } from "@/shared/lib/supabase/server";
 import type {
   TenantSubscription,
   SubscriptionPlan,
+  SubscriptionStatus,
   PlanFeature,
   FeatureKey,
 } from "../types";
@@ -39,14 +40,15 @@ export async function getSubscription(
     id: data.id,
     organizationId: data.organization_id,
     planId: data.plan_id,
-    status: data.status,
-    billingCycle: data.billing_cycle,
+    status: data.status as SubscriptionStatus,
+    billingCycle: data.billing_cycle as "monthly" | "yearly",
     currentPeriodStart: data.current_period_start,
     currentPeriodEnd: data.current_period_end,
     trialEnd: data.trial_end,
     cancelAt: data.cancel_at,
     cancelledAt: data.cancelled_at,
-    paymentProvider: data.payment_provider,
+    paymentProvider:
+      data.payment_provider as TenantSubscription["paymentProvider"],
     paymentProviderId: data.payment_provider_id,
     plan: data.plan as unknown as SubscriptionPlan,
   };
@@ -55,9 +57,7 @@ export async function getSubscription(
 /**
  * Get all features for a subscription plan.
  */
-export async function getPlanFeatures(
-  planId: string
-): Promise<PlanFeature[]> {
+export async function getPlanFeatures(planId: string): Promise<PlanFeature[]> {
   const supabase = await createClient();
 
   const { data } = await supabase

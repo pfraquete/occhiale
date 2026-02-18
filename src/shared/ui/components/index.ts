@@ -72,29 +72,25 @@ export type { DrawerProps } from "./drawer";
 export { Toast, ToastContainer, toast, useToast } from "./toast";
 export type { ToastData } from "./toast";
 
-export {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "./tooltip";
+export { Tooltip } from "./tooltip";
+export type { TooltipProps } from "./tooltip";
 
-export {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from "./sheet";
+export { Sheet } from "./sheet";
+export type { SheetProps } from "./sheet";
 
 export { Switch } from "./switch";
+export type { SwitchProps } from "./switch";
 
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
+export type {
+  TabsProps,
+  TabsListProps,
+  TabsTriggerProps,
+  TabsContentProps,
+} from "./tabs";
 
-export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
+export { Avatar } from "./avatar";
+export type { AvatarProps } from "./avatar";
 
 export {
   DropdownMenu,
